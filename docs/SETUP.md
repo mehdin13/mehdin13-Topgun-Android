@@ -48,3 +48,6 @@ topgun.mapsApiKey=AIza...
 1. Firebase console -> add an Android app `app.topgun.android` -> download `google-services.json` to `app/`.
 2. Re-enable the google-services plugin (see docs/reports/entry-manifest-needs.md).
 3. There is no device-token endpoint on the backend yet (docs/BACKEND_GAPS.md #17).
+
+
+> See `docs/CI_SETUP.md` for the current, complete walkthrough (GitHub Actions, signing key, Google Cloud, RevenueCat). The key names there supersede any older ones above.

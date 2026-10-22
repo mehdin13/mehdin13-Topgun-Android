@@ -114,6 +114,24 @@ class TopGunApiTest {
         assertEquals("""{"social_network":"google","email":"a@b.c","first_name":"Ann","last_name":""}""", request.body.readUtf8())
     }
 
+    @Test fun socialLoginSendsTheGoogleIdTokenWhenGiven() = runTest {
+        enqueue(200, """{"message":"Login successful.","user_id":3,"token":"t","is_vip":false}""")
+        api.socialLogin("google", "a@b.c", "Ann", "Lee", idToken = "jwt.value")
+        assertEquals(
+            """{"social_network":"google","email":"a@b.c","id_token":"jwt.value","first_name":"Ann","last_name":"Lee"}""",
+            server.takeRequest().body.readUtf8(),
+        )
+    }
+
+    @Test fun deleteAccountCallsDeleteAndAcceptsNoContent() = runTest {
+        enqueue(204)
+        api.deleteAccount()
+        val request = server.takeRequest()
+        assertEquals("DELETE", request.method)
+        assertEquals("/api/v1/users/delete_account/", request.path)
+        assertEquals("Token secret-token", request.getHeader("Authorization"))
+    }
+
     @Test fun commentsAndRatingsUseTheBackendFieldNames() = runTest {
         enqueue(201, """{"message":"Created New Comment"}""")
         api.postComment(aircraftId = 4, body = "Nice", parentId = 2)

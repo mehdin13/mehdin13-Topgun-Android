@@ -37,7 +37,7 @@ class UserRepository(
     /** Returns true when signed in, false when the user cancelled. Throws [ApiError] / platform errors otherwise. */
     suspend fun signInWithGoogle(): Boolean {
         val account = platform.signInWithGoogle() ?: return false
-        val reply = api.socialLogin("google", account.email, account.firstName, account.lastName)
+        val reply = api.socialLogin("google", account.email, account.firstName, account.lastName, account.idToken)
         val token = reply.token ?: throw ApiError.Validation(reply.message)
         session.signIn(token)
         prefs.userEmail = account.email
@@ -61,6 +61,13 @@ class UserRepository(
 
     suspend fun signOut() {
         runCatching { api.logout() }          // best effort: revoke the token on the server
+        runCatching { platform.signOutGoogle() }
+        clearLocal()
+    }
+
+    /** Deletes the account on the server, then forgets it on this device. Throws [ApiError] if the server refuses. */
+    suspend fun deleteAccount() {
+        api.deleteAccount()
         runCatching { platform.signOutGoogle() }
         clearLocal()
     }

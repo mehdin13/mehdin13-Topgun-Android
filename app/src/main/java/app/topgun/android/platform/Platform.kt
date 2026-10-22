@@ -12,7 +12,8 @@ interface KeyValueStore {
     fun putBoolean(key: String, value: Boolean)
 }
 
-class GoogleAccount(val email: String, val firstName: String?, val lastName: String?, val photoUrl: String?)
+/** [idToken] is the Google ID token; the backend verifies it before trusting [email]. */
+class GoogleAccount(val email: String, val firstName: String?, val lastName: String?, val photoUrl: String?, val idToken: String? = null)
 
 sealed interface ProStatus {
     data object Free : ProStatus

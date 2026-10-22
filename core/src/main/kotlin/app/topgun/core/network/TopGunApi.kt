@@ -136,13 +136,15 @@ class TopGunApi(private val client: ApiClientContract) {
     // ------------------------------------------------------------------- users
 
     /**
-     * Google sign-in. The backend trusts the email we send (it does not verify a Google ID token),
-     * which is a security gap on the server (docs/BACKEND_GAPS.md). 201 = new account, 200 = existing.
+     * Google sign-in. Send the Google [idToken]: the backend verifies it and takes the email from it.
+     * Without a token the backend only accepts the bare email while its ALLOW_UNVERIFIED_SOCIAL_LOGIN setting is on.
+     * 201 = new account, 200 = existing.
      */
-    suspend fun socialLogin(socialNetwork: String, email: String, firstName: String?, lastName: String?): AuthResponse {
+    suspend fun socialLogin(socialNetwork: String, email: String, firstName: String?, lastName: String?, idToken: String? = null): AuthResponse {
         val body = buildJsonObject {
             put("social_network", socialNetwork)
             put("email", email)
+            if (idToken != null) put("id_token", idToken)
             put("first_name", firstName.orEmpty())
             put("last_name", lastName.orEmpty())
         }.toString()
@@ -150,6 +152,9 @@ class TopGunApi(private val client: ApiClientContract) {
     }
 
     suspend fun userInfo(): UserInfo = client.send(ApiEndpoint.get("users/user_info/"), UserInfo.serializer())
+
+    /** Permanently deletes the signed-in account and its data (`DELETE users/delete_account/`, 204). */
+    suspend fun deleteAccount() = client.send(ApiEndpoint.delete("users/delete_account/"))
 
     /** Revokes the token on the server. Call before clearing the local session. */
     suspend fun logout() = client.send(ApiEndpoint.post("users/logout/"))

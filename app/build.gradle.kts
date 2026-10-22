@@ -2,7 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    // alias(libs.plugins.google.services)  // enable once app/google-services.json (Firebase) is added
+}
+
+// Firebase (push) is switched on automatically when app/google-services.json exists (CI writes it from a secret).
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
 }
 
 android {
@@ -26,11 +30,27 @@ android {
         manifestPlaceholders["mapsApiKey"] = key("topgun.mapsApiKey")
     }
 
+    // CI signs with a fixed test key (so the Google sign-in SHA-1 stays the same between builds).
+    // Locally these variables are unset and Android Studio's own debug key is used.
+    val ciKeystore = System.getenv("TOPGUN_KEYSTORE_PATH")
+    signingConfigs {
+        if (ciKeystore != null) {
+            create("ci") {
+                storeFile = file(ciKeystore)
+                storePassword = System.getenv("TOPGUN_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("TOPGUN_KEY_ALIAS")
+                keyPassword = System.getenv("TOPGUN_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         debug {
+            if (ciKeystore != null) signingConfig = signingConfigs.getByName("ci")
             buildConfigField("String", "API_BASE_URL", "\"${providers.gradleProperty("topgun.apiBaseUrl.debug").get()}\"")
         }
         release {
+            if (ciKeystore != null) signingConfig = signingConfigs.getByName("ci")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             buildConfigField("String", "API_BASE_URL", "\"${providers.gradleProperty("topgun.apiBaseUrl.release").get()}\"")

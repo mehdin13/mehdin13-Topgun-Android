@@ -71,6 +71,26 @@ class SettingsViewModel(
 
     fun signOut() { viewModelScope.launch { user.signOut() } }
 
+    private val _deleting = MutableStateFlow(false)
+    val deleting: StateFlow<Boolean> = _deleting.asStateFlow()
+
+    /** Permanently deletes the account (Google Play requires this in the app). */
+    fun deleteAccount() {
+        if (_deleting.value) return
+        _deleting.value = true
+        viewModelScope.launch {
+            try {
+                user.deleteAccount()
+            } catch (e: kotlin.coroutines.cancellation.CancellationException) {
+                throw e
+            } catch (e: Throwable) {
+                _toast.value = "We couldn't delete your account. Please try again."
+            } finally {
+                _deleting.value = false
+            }
+        }
+    }
+
     fun dismissToast() { _toast.value = null }
 
     companion object {

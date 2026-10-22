@@ -22,8 +22,8 @@ import java.lang.ref.WeakReference
  * (see docs/SETUP.md). Credential Manager needs an Activity to show its sheet, so the helper remembers the
  * resumed Activity of the app; [signIn] therefore only works while the UI is in the foreground.
  *
- * The backend login (`users/social_network_register/`) takes only the e-mail and names, so the ID token is not
- * sent anywhere (see docs/BACKEND_GAPS.md #1/#19); it is only parsed to read the account.
+ * The ID token is sent to `users/social_network_register/`, which verifies it against the OAuth client ids it
+ * is configured with (GOOGLE_OAUTH_CLIENT_IDS; the web client id used here must be in that list).
  */
 class GoogleSignInHelper(private val context: Context) {
     private val credentialManager = CredentialManager.create(context)
@@ -65,6 +65,7 @@ class GoogleSignInHelper(private val context: Context) {
                 firstName = google.givenName,
                 lastName = google.familyName,
                 photoUrl = google.profilePictureUri?.toString(),
+                idToken = google.idToken,
             )
         }
         throw IllegalStateException("Unexpected credential type")

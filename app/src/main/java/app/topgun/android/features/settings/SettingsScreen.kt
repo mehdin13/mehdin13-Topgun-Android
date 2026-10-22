@@ -20,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Language
@@ -101,6 +102,8 @@ fun SettingsScreen(onOpenBlog: () -> Unit, onOpenBadges: () -> Unit, onShowSignI
     var showTheme by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     var confirmLogout by rememberSaveable { mutableStateOf(false) }
+    var confirmDelete by rememberSaveable { mutableStateOf(false) }
+    val deleting by vm.deleting.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
 
     BackHandler(enabled = showTheme) { showTheme = false }
@@ -193,8 +196,13 @@ fun SettingsScreen(onOpenBlog: () -> Unit, onOpenBadges: () -> Unit, onShowSignI
                 SettingsRow(Icons.Filled.Cancel, TG.colors.textPrimary, "Twitter", showDivider = user.isLoggedIn, onClick = { platform.openUrl(SettingsLinks.TWITTER) })
                 if (user.isLoggedIn) {
                     SettingsRow(
-                        Icons.AutoMirrored.Filled.Logout, TGBrand.orange, "Logout", titleColor = TGBrand.red, showDivider = false,
+                        Icons.AutoMirrored.Filled.Logout, TGBrand.orange, "Logout", titleColor = TGBrand.red,
                         onClick = { confirmLogout = true },
+                    )
+                    // Not in the iOS app yet; Google Play requires an in-app way to delete the account.
+                    SettingsRow(
+                        Icons.Filled.Delete, TGBrand.red, "Delete Account", titleColor = TGBrand.red, showDivider = false,
+                        onClick = { if (!deleting) confirmDelete = true },
                     )
                 }
             }
@@ -209,6 +217,15 @@ fun SettingsScreen(onOpenBlog: () -> Unit, onOpenBadges: () -> Unit, onShowSignI
             text = { Text("This will delete all ${cache.fileCount} downloaded 3D models ($cacheSize). You can download them again later.") },
             confirmButton = { TextButton(onClick = { confirmClear = false; vm.clearCache() }) { Text("Clear", color = TGBrand.red) } },
             dismissButton = { TextButton(onClick = { confirmClear = false }) { Text("Cancel") } },
+        )
+    }
+    if (confirmDelete) {
+        AlertDialog(
+            onDismissRequest = { confirmDelete = false },
+            title = { Text("Delete your account?") },
+            text = { Text("This permanently deletes your account, favorites, comments, ratings and search history. It cannot be undone.") },
+            confirmButton = { TextButton(onClick = { confirmDelete = false; vm.deleteAccount() }) { Text("Delete", color = TGBrand.red) } },
+            dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
         )
     }
     if (confirmLogout) {
