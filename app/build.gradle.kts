@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -21,7 +23,7 @@ android {
         versionName = "0.1.0"
         // Keys come from local.properties / CI, never from source control.
         // Google OAuth *web* client ID (for Credential Manager) and the Google Maps key.
-        val localProps = java.util.Properties().apply {
+        val localProps = Properties().apply {
             rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
         }
         fun key(name: String) = (localProps.getProperty(name) ?: providers.gradleProperty(name).orNull ?: "").trim()
