@@ -28,3 +28,10 @@ Found while porting to Android (2026-10-22), from reading the Django source and 
 17. **P – Push notifications.** The app registers with Firebase, but the backend has no device-token model/endpoint (the logout view has commented-out APNs code).
 18. **P – Throttle is 4 requests/second** per user and per IP for every endpoint. The home screen fires several calls at once; shared NATs (mobile carriers) share the anonymous bucket. Consider a higher limit for reads or scoped throttles.
 19. **P – Social login for Android needs the Google *web* client ID** to be configured as an allowed audience once item 1 is fixed (the iOS client ID cannot be reused).
+
+## Added after the screens were ported
+20. **C – Home filter inputs.** `hardpoints` is parsed as an int by the backend but the apps send strings such as "<5 Hardpoints", so that filter does nothing; the unit of `speed` (mph in the app, unknown in the data) is unclear; generation values "2th"/"3th" are typos shared with the iOS app.
+21. **B – Search writes on GET.** `aircraft_search` increments a `SearchQuery` row on every GET (also on retries).
+22. **P – Heavy list rows.** `country/` returns each country's full `aircraft_list` and `manufacturers` on every list row, and country ordering by `-aircraft_count` has no tie-break, so pages can repeat or skip rows. Country/manufacturer `aircraft_list` rows have no `thumbnail` or `is_vip`.
+23. **C – Likes and comments.** The detail response has no `is_liked`; the like reply has no total. Comments use two different models (list/post `Comment` vs embedded `AircraftComment`) and only a user id is available to show an author.
+24. **P – Badges** may never be awarded (gaps 4 and 10).
