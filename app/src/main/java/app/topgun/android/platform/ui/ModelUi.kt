@@ -31,6 +31,8 @@ import com.google.ar.core.Config
 import com.google.ar.core.Frame
 import io.github.sceneview.Scene
 import io.github.sceneview.ar.ARScene
+import io.github.sceneview.ar.arcore.createAnchorOrNull
+import io.github.sceneview.ar.arcore.isValid
 import io.github.sceneview.ar.node.AnchorNode
 import io.github.sceneview.loaders.ModelLoader
 import io.github.sceneview.model.ModelInstance
