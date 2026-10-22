@@ -70,7 +70,7 @@ class ApiClient(
             if (it.isSuccessful) return text
 
             val error = ApiError.from(it.code, text, it.header("Retry-After"))
-            if (error is ApiError.Unauthorized && endpoint.requiresAuth) session.signOut()
+            if (error is ApiError.Unauthorized && endpoint.requiresAuth && endpoint.authToken == null) session.signOut()
             throw error
         }
     }
@@ -86,7 +86,7 @@ class ApiClient(
         }.build()
 
         val builder = Request.Builder().url(url).header("Accept", "application/json")
-        if (endpoint.requiresAuth) session.token()?.let { builder.header("Authorization", "Token $it") }
+        if (endpoint.requiresAuth) (endpoint.authToken ?: session.token())?.let { builder.header("Authorization", "Token $it") }
 
         val body: RequestBody? = when (val b = endpoint.body) {
             ApiEndpoint.Body.None -> null

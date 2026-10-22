@@ -25,6 +25,11 @@ enum class FeedSort(val value: String, val label: String) {
 class StoryApi(private val client: ApiClientContract) {
     private val publicList = storyListSerializer(PublicStoryDto.serializer())
 
+    /** Throws [ApiError.Unauthorized] when [token] is not valid. Never signs the current session out. */
+    suspend fun verifyToken(token: String) {
+        client.send(ApiEndpoint.verifyToken(token), storyListSerializer(StorySummaryDto.serializer()))
+    }
+
     suspend fun myStories(): List<StorySummaryDto> =
         client.send(ApiEndpoint.get("stories/my_stories/"), storyListSerializer(StorySummaryDto.serializer()))
 

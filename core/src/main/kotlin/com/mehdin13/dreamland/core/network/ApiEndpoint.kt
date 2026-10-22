@@ -14,6 +14,8 @@ class ApiEndpoint(
     val body: Body = Body.None,
     /** Set false only for public endpoints (Discover, shared links). Everything else sends the token. */
     val requiresAuth: Boolean = true,
+    /** Sends this token instead of the session's. Used to verify a token before it is saved (DEBUG dev sign-in). */
+    val authToken: String? = null,
     /** Story generation runs inside the request on the backend (BACKEND_GAPS #9), so it needs a long read timeout. */
     val readTimeoutSeconds: Long? = null,
     /** Called with the fraction (0..1) of the body sent. Only used for uploads. */
@@ -31,6 +33,9 @@ class ApiEndpoint(
     companion object {
         fun get(path: String, query: List<Pair<String, String>> = emptyList(), requiresAuth: Boolean = true) =
             ApiEndpoint(Method.GET, path, query, requiresAuth = requiresAuth)
+
+        /** Lists my stories with [token] without touching the session, to check the token is valid. */
+        fun verifyToken(token: String) = ApiEndpoint(Method.GET, "stories/my_stories/", authToken = token)
 
         fun delete(path: String) = ApiEndpoint(Method.DELETE, path)
 

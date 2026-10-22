@@ -45,6 +45,14 @@ class ApiClientTest {
         assertEquals("/api/stories/my_stories/", request.path)
     }
 
+    @Test fun verifyTokenUsesTheGivenTokenAndLeavesTheSessionAlone() = runTest {
+        enqueue(401)
+        assertFailsWith<ApiError.Unauthorized> { api.verifyToken("candidate") }
+        assertEquals("Token candidate", server.takeRequest().getHeader("Authorization"))
+        assertTrue(session.isSignedIn.value)
+        assertEquals("secret-token", tokens.read())
+    }
+
     @Test fun publicEndpointsSendNoToken() = runTest {
         enqueue(200, "[]")
         api.publicStories(sort = FeedSort.POPULAR, category = "Fairy tale", search = "dragon")
