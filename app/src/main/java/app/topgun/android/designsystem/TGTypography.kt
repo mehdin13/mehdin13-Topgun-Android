@@ -44,3 +44,17 @@ internal fun materialTypography(): Typography {
         labelSmall = TGText.sailecRegular(10),
     )
 }
+
+/** System-font styles used by the Home feature cards and filter sheet (iOS `.headline`, `.body`, `.caption` default fonts). */
+object TGHomeText {
+    /** `.headline` bold: feature card title, filter section header. */
+    val headline = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+    /** Default `Text` in a List row. */
+    val body = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 17.sp)
+    /** `.caption`: feature card subtitle, "From: 100 Milion". */
+    val caption = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 12.sp)
+    /** Search field text (`TextField` default). */
+    val field = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, fontSize = 16.sp)
+    /** EmptyStateView title 18 semibold; Retry 16 semibold. */
+    val emptyTitle = TextStyle(fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
+}

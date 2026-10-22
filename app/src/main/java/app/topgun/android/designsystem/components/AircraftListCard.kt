@@ -1,7 +1,8 @@
 package app.topgun.android.designsystem.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,12 +40,16 @@ import app.topgun.core.model.Aircraft
  * 100dp rounded thumbnail (with a dark lock overlay for VIP aircraft the user cannot open), name, maker,
  * and generation / country / years tags. [isLocked] is true for a VIP aircraft when the user is not Pro.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AircraftListCard(
     aircraft: Aircraft,
     isLocked: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** Long press (iOS `.contextMenu`); null = no long-press action. */
+    onLongClick: (() -> Unit)? = null,
+    onLongClickLabel: String? = null,
 ) {
     val c = TG.colors
     Row(
@@ -52,7 +57,7 @@ fun AircraftListCard(
             .fillMaxWidth()
             .clip(TGRadius.card)
             .background(c.card)
-            .clickable(role = Role.Button, onClick = onClick)
+            .combinedClickable(role = Role.Button, onLongClickLabel = onLongClickLabel, onLongClick = onLongClick, onClick = onClick)
             .padding(TGSpace.m),
         horizontalArrangement = Arrangement.spacedBy(TGSpace.m),
     ) {

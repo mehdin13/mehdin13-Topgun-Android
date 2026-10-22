@@ -1,18 +1,27 @@
 package app.topgun.android.features.paywall
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import app.topgun.android.data.containerViewModel
 import app.topgun.android.designsystem.TG
-import app.topgun.android.designsystem.TGText
+import app.topgun.android.platform.ui.LocalPlatformUi
 
-/** TODO(port): iOS RevenueCatUI PaywallView sheet; hosts PlatformUi.Paywall */
+/**
+ * Subscription paywall (iOS `PaywallView()` from RevenueCatUI, shown as a sheet in `HomeView`). The RevenueCat
+ * paywall itself comes from [LocalPlatformUi]; it reports the purchased period in days (180 / 360 / 9999, see
+ * `BillingHelper`), which is stored through [PaywallViewModel] before the screen closes.
+ */
 @Composable
 fun PaywallScreen(onDismiss: () -> Unit) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text("PaywallScreen", style = TGText.sailecMedium(16), color = TG.colors.textPrimary)
+    val vm = containerViewModel { PaywallViewModel(it.user) }
+    Box(Modifier.fillMaxSize().background(TG.colors.background)) {
+        LocalPlatformUi.current.Paywall(
+            modifier = Modifier.fillMaxSize(),
+            onDismiss = onDismiss,
+            onPurchased = { days -> vm.onPurchased(days, done = onDismiss) },
+        )
     }
 }
