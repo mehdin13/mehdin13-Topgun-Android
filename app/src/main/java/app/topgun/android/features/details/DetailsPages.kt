@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -82,7 +83,7 @@ import app.topgun.android.designsystem.components.TGImage
 import app.topgun.android.platform.ui.LocalPlatformUi
 import app.topgun.core.model.AircraftDetail
 import app.topgun.core.model.ImageGalleryItem
-import androidx.compose.material.icons.Icons.Filled
+import kotlinx.coroutines.launch
 
 /** Routes a [DetailPage] to its composable. [onClose] returns to the detail. */
 @Composable
@@ -184,7 +185,7 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
                         img.image, contentDescription = "Photo ${i + 1}",
                         modifier = Modifier.size(TGDetailSize.thumbWidth, TGDetailSize.thumbHeight).clip(TGDetailSize.thumbRadius)
                             .border(if (selected) TGDetailSpace.hair else TGDetailSpace.zero, TGDetailColors.onPhoto, TGDetailSize.thumbRadius)
-                            .clickable(role = Role.Button) { scope.launchScroll(pager, i) },
+                            .clickable(role = Role.Button) { scope.launch { pager.animateScrollToPage(i) } },
                     )
                 }
             }
@@ -192,11 +193,252 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
     }
 }
 
-private fun kotlinx.coroutines.CoroutineScope.launchScroll(pager: androidx.compose.foundation.pager.PagerState, index: Int) {
-    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).let { }
-    this.launchIn { pager.animateScrollToPage(index) }
+// ------------------------------------------------------------- specs
+
+private val specIcons = listOf(Icons.Filled.Eco, Icons.Filled.Settings, Icons.Filled.Build, Icons.Filled.Bolt)
+
+@Composable
+private fun SpecSection(title: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
+        androidx.compose.material3.HorizontalDivider(color = TGBrand.gray.copy(alpha = 0.4f))
+        Text(title, style = TGText.sailecBold(20), color = TG.colors.textPrimary)
+    }
 }
 
-private fun kotlinx.coroutines.CoroutineScope.launchIn(block: suspend () -> Unit) {
-    kotlinx.coroutines.launch(this) { block() }
+/** iOS `SettingItem`. [onClick] makes the row a link. */
+@Composable
+private fun SpecRow(index: Int, title: String, value: String, onClick: (() -> Unit)? = null) {
+    Row(
+        Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
+            .padding(vertical = TGSpace.s, horizontal = TGSpace.xs),
+        horizontalArrangement = Arrangement.spacedBy(TGSpace.l),
+    ) {
+        Icon(specIcons[index % specIcons.size], contentDescription = null, tint = TG.colors.textPrimary.copy(alpha = 0.5f), modifier = Modifier.size(TGDetailSize.specIcon))
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TGSpace.xs)) {
+            Text(title, style = TGText.sailecBold(16), color = TG.colors.textPrimary)
+            if (value.isNotEmpty()) Text(value, style = TGText.sailecRegular(13), color = if (onClick != null) TG.colors.accent else TG.colors.textPrimary.copy(alpha = 0.5f))
+        }
+    }
+}
+
+/** iOS `SpecialDetailView`: generation, name, NATO name, sketches and the four specification tables, in the chosen unit system. */
+@Composable
+private fun SpecsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Unit) {
+    var units by rememberSaveable { mutableStateOf(UnitSystem.Metric) }
+    val f = remember(units) { SpecFormat(units) }
+    val na = SpecFormat.NA
+    var n = 0
+    fun next() = n++
+    Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding().verticalScroll(rememberScrollState())) {
+        Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
+            Spacer(Modifier.weight(1f))
+            UnitsToggle(units) { units = it }
+        }
+        Column(Modifier.padding(horizontal = TGSpace.l), verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
+            Column(verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
+                Text(
+                    (d.generation ?: na).uppercase(), style = TGText.sailecMedium(10), color = TG.colors.textPrimary,
+                    modifier = Modifier.background(TGBrand.red, androidx.compose.foundation.shape.CircleShape).padding(horizontal = TGSpace.s, vertical = TGSpace.xs),
+                )
+                Text(d.name, style = TGText.sailecBold(28), color = TG.colors.textPrimary)
+                Text("Nato Name: ${d.natoReportingName ?: na}", style = TGText.sailecRegular(10), color = TGBrand.placeholder)
+            }
+            if (d.sketches.isNotEmpty()) {
+                val pager = rememberPagerState(pageCount = { d.sketches.size })
+                HorizontalPager(pager, Modifier.fillMaxWidth().height(TGDetailSize.sketchHeight)) { i ->
+                    TGImage(d.sketches[i].file, contentDescription = d.sketches[i].name.ifBlank { "Sketch ${i + 1}" }, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                }
+            }
+            SpecSection("General Specifications:")
+            SpecRow(next(), "Role", d.role ?: na)
+            SpecRow(next(), "Primary User", d.primaryUser ?: na)
+            SpecRow(next(), "Developed From", d.developedFrom?.let { "Aircraft #$it" } ?: na, d.developedFrom?.let { id -> { a.onOpenAircraft(id) } })
+
+            SpecSection("Technical Details:")
+            SpecRow(next(), "Length", f.meters(d.length))
+            SpecRow(next(), "Height", f.meters(d.height))
+            SpecRow(next(), "Wingspan", f.meters(d.wingspan))
+            SpecRow(next(), "Full Capacity", f.liters(d.fuelCapacity))
+            SpecRow(next(), "Empty Weight", f.kg(d.emptyWeight))
+            SpecRow(next(), "Max Weight", f.kg(d.maxWeight))
+
+            SpecSection("Performance Specifications:")
+            SpecRow(next(), "Max Speed", f.kph(d.maxSpeed))
+            SpecRow(next(), "Range", f.km(d.range))
+            SpecRow(next(), "Combat Radius", f.km(d.combatRadius))
+            SpecRow(next(), "Ferry Range", f.km(d.ferryRange))
+            SpecRow(next(), "Operational Range", f.km(d.operationalRange))
+            SpecRow(next(), "Radar Range", f.km(d.radarRange))
+            SpecRow(next(), "Trust-to-Weight Ratio", d.trustToWeightRatio ?: na)
+            SpecRow(next(), "Max G-Load(Gs)", d.maxGLoadGs ?: na)
+
+            SpecSection("Other Specifications:")
+            SpecRow(next(), "Wing Configuration", d.wingConfiguration ?: na)
+            SpecRow(next(), "Radar System", d.radarSystem ?: na)
+            SpecRow(next(), "Jamming Systems", d.jammingSystems ?: na)
+            SpecRow(next(), "Engine Type", d.engineType ?: na)
+            SpecRow(next(), "Armament (Guns)", d.armament ?: na)
+            SpecRow(next(), "Canopy Type", d.canopyType ?: na)
+            SpecRow(next(), "IRST", d.irst ?: na)
+
+            // Fields the iOS screen does not show, and the category's custom fields. Only filled values are listed.
+            val extras = listOfNotNull(
+                d.aircraftClass?.let { "Class" to it },
+                d.numberOfEngines?.let { "Number of Engines" to it.toString() },
+                d.engineAfterburner?.let { "Afterburner" to if (it) "Yes" else "No" },
+                d.flyByWire?.let { "Fly-by-Wire" to if (it) "Yes" else "No" },
+                d.hardpoints?.let { "Hardpoints" to it.toString() },
+                d.wingArea?.let { "Wing Area" to it },
+                d.wingLoading?.let { "Wing Loading" to it },
+                d.grossWeight?.let { "Gross Weight" to it },
+                d.serviceCeiling?.let { "Service Ceiling" to it.toString() },
+                d.rateOfClimb?.let { "Rate of Climb" to it.toString() },
+                d.radarCrossSection?.let { "Radar Cross Section" to it.toString() },
+                d.stealthCapabilities?.let { "Stealth" to it },
+                d.electronicCountermeasures?.let { "Electronic Countermeasures" to it },
+                d.propulsion?.let { "Propulsion" to it },
+            ).filter { it.second.isNotBlank() } + d.customFields.mapNotNull { c ->
+                val name = c.fieldName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
+                name to (c.fieldValue ?: "")
+            }
+            if (extras.isNotEmpty()) {
+                SpecSection("More Specifications:")
+                extras.forEach { (title, value) -> SpecRow(next(), title, value) }
+            }
+            Spacer(Modifier.height(TGDetailSpace.bottomClear))
+        }
+    }
+}
+
+@Composable
+private fun UnitsToggle(selected: UnitSystem, onSelect: (UnitSystem) -> Unit) {
+    Row(Modifier.clip(TGRadius.button).background(TG.colors.card)) {
+        UnitSystem.entries.forEach { u ->
+            Text(
+                u.label, style = TGText.sailecMedium(14),
+                color = if (u == selected) TGDetailColors.onPhoto else TG.colors.textPrimary,
+                modifier = Modifier.background(if (u == selected) TG.colors.accent else TG.colors.card)
+                    .defaultMinSize(minHeight = TGSize.tapMin).clickable(role = Role.Button) { onSelect(u) }
+                    .padding(horizontal = TGSpace.m).wrapContentHeightCenter(),
+            )
+        }
+    }
+}
+
+private fun Modifier.wrapContentHeightCenter(): Modifier = this.then(Modifier.wrapContentHeight(Alignment.CenterVertically))
+
+// ------------------------------------------------------------- videos
+
+/** iOS `VideoPlayerView`: the gallery videos one after another with a close and a next button. */
+@Composable
+private fun VideosPage(d: AircraftDetail, onClose: () -> Unit) {
+    val media = LocalAppContainer.current.media
+    val urls = remember(d.videoGallery) { d.videoGallery.mapNotNull { media.resolve(it.video) } }
+    var index by rememberSaveable { mutableStateOf(0) }
+    Column(Modifier.fillMaxSize().background(TGDetailColors.photoBlack).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
+            DetailCircleButton(Icons.Filled.Close, "Close", onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
+            Spacer(Modifier.weight(1f))
+            if (urls.size > 1) Text("${index + 1} / ${urls.size}", style = TGText.sailecMedium(14), color = TGDetailColors.onPhoto)
+            Spacer(Modifier.weight(1f))
+            if (index < urls.size - 1) {
+                DetailCircleButton(Icons.Filled.SkipNext, "Next video", { index += 1 }, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
+            } else {
+                Spacer(Modifier.size(TGSize.tapMin))
+            }
+        }
+        if (urls.isEmpty()) {
+            Text("Error loading videos.", style = TGText.sailecMedium(16), color = TGBrand.red, modifier = Modifier.padding(TGSpace.l))
+        } else {
+            key(urls[index.coerceIn(0, urls.size - 1)]) {
+                LocalPlatformUi.current.VideoPlayer(urls[index.coerceIn(0, urls.size - 1)], Modifier.fillMaxWidth().weight(1f))
+            }
+        }
+    }
+}
+
+// ----------------------------------------------------------- operators
+
+/** iOS `MapView`: the full map of the countries that operate the aircraft. A pin opens the country. */
+@Composable
+private fun OperatorsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Unit) {
+    val pins = rememberOperatorPins(d.countriesOfOperation)
+    Box(Modifier.fillMaxSize()) {
+        LocalPlatformUi.current.WorldMap(pins, Modifier.fillMaxSize(), onPinClick = { a.onOpenCountry(it.id) })
+        DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose, Modifier.statusBarsPadding().padding(TGSpace.s))
+    }
+}
+
+// ----------------------------------------------------------------- pdf
+
+/** iOS `AircraftPdf`. */
+@Composable
+private fun PdfPage(d: AircraftDetail, onClose: () -> Unit) {
+    val url = LocalAppContainer.current.media.resolve(d.filePdf)
+    Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding()) {
+        Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
+            Text("${d.name} PDF", style = TGText.sailecBold(16), color = TG.colors.textPrimary, modifier = Modifier.padding(start = TGSpace.m), maxLines = 1)
+        }
+        if (url == null) {
+            Text("Failed to load PDF.", style = TGText.sailecMedium(16), color = TG.colors.textPrimary, modifier = Modifier.padding(TGSpace.l))
+        } else {
+            LocalPlatformUi.current.PdfViewer(url, Modifier.fillMaxWidth().weight(1f))
+        }
+    }
+}
+
+// --------------------------------------------------------------- 3D/AR
+
+private fun isGltf(url: String?): Boolean {
+    val path = url?.substringBefore('?')?.lowercase() ?: return false
+    return path.endsWith(".glb") || path.endsWith(".gltf")
+}
+
+/**
+ * iOS `Model3DView`. The backend ships `.usdz` (Apple only); the viewer and AR are offered only for `.glb` / `.gltf`.
+ * Models are cached on first load by the Android viewer (cacheDir/models; Settings > Clear Cache removes them).
+ */
+@Composable
+private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
+    val url = LocalAppContainer.current.media.resolve(d.file3d)
+    val supported = isGltf(url)
+    var ar by rememberSaveable { mutableStateOf(false) }
+    if (ar && supported && url != null) {
+        LocalPlatformUi.current.ArViewer(url, Modifier.fillMaxSize(), onClose = { ar = false })
+        return
+    }
+    Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding().padding(horizontal = TGDetailSpace.ten)) {
+        Row(Modifier.fillMaxWidth().padding(vertical = TGSpace.s)) { DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose) }
+        if (supported && url != null) {
+            LocalPlatformUi.current.Model3dViewer(url, Modifier.fillMaxWidth().height(TGDetailSize.modelHeight))
+        } else {
+            Column(
+                Modifier.fillMaxWidth().height(TGDetailSize.modelHeight).clip(TGRadius.card).background(TG.colors.card).padding(TGSpace.xl),
+                verticalArrangement = Arrangement.spacedBy(TGSpace.m, Alignment.CenterVertically),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(Icons.Filled.ViewInAr, contentDescription = null, tint = TG.colors.textSecondary, modifier = Modifier.size(TGSize.tapMin))
+                Text("3D model not available on Android yet", style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
+                Text("This aircraft's model is in a format only Apple devices can open. We are working on it.", style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
+            }
+        }
+        Column(Modifier.fillMaxWidth().padding(top = TGSpace.xl), verticalArrangement = Arrangement.spacedBy(TGSpace.m)) {
+            Text(d.name, style = TGText.sailecBold(28), color = TG.colors.textPrimary, maxLines = 2)
+            d.role?.takeIf { it.isNotBlank() }?.let { Text(it, style = TGText.sailecMedium(16), color = TGBrand.placeholder) }
+        }
+        Spacer(Modifier.weight(1f))
+        if (supported) {
+            Button(
+                onClick = { ar = true },
+                modifier = Modifier.align(Alignment.CenterHorizontally).width(TGDetailSize.modelButtonWidth).defaultMinSize(minHeight = TGSize.tapMin),
+                shape = TGDetailSize.buttonRadius,
+            ) {
+                Icon(Icons.Filled.ViewInAr, contentDescription = null)
+                Text("View in AR", style = TGText.sailecMedium(16), modifier = Modifier.padding(start = TGSpace.s))
+            }
+        }
+        Spacer(Modifier.height(TGSpace.xl).navigationBarsPadding())
+    }
 }
