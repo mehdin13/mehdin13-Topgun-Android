@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Dreamland"
+rootProject.name = "TopGun"
 include(":app", ":core")

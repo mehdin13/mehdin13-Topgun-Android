@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- The Compose theme (DreamlandTheme) paints everything; this only covers the window before first frame. -->
-    <style name="Theme.Dreamland" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- The Compose theme (TopGunTheme) paints everything; this only covers the window before the first frame. -->
+    <style name="Theme.TopGun" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
 </resources>

@@ -3,16 +3,18 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
-        android:name=".DreamlandApp"
+        android:name=".TopGunApp"
         android:allowBackup="false"
         android:icon="@android:drawable/sym_def_app_icon"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Dreamland"
-        
+        android:theme="@style/Theme.TopGun"
         android:networkSecurityConfig="@xml/network_security_config">
+
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="${mapsApiKey}" />
 
         <activity
             android:name=".MainActivity"

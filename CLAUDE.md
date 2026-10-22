@@ -1,41 +1,41 @@
-# Dreamland Android
+# Top Gun for Android
 
-Native Jetpack Compose port of the Dreamland iOS app (children's AI storybook: a child's ideas and paintings become illustrated stories). Same screens, flows, design tokens and API as iOS; Material 3 components underneath.
+Android port of the Top Gun iOS app ("Top Gun – Aviation Academy": an encyclopedia of military aircraft with 3D models and AR, galleries, PDFs, videos, countries and manufacturers on a map/globe, curated lists, favorites, comments, ratings, blog, badges, and a Pro subscription). Same screens, flows, colors, fonts and API as iOS; Jetpack Compose + Material 3 underneath.
 
 ## Source of truth
-- iOS app: `mehdin13/dreamland-ios` (cloned at `/home/user/DreamLand-ios` in earlier sessions). Read `CLAUDE.md`, `docs/PROJECT_SPEC.md`, `docs/BACKEND_GAPS.md`, `docs/postman_collection.json`, `docs/design/design-pkg/` (tokens + screen HTML) and the Swift views before building a screen.
-- The Dreamland Django backend is NOT in this workspace's repos (`ncodestudio/topgun-backend` is the unrelated Top Gun aircraft API). Contract = iOS DTOs + Postman + BACKEND_GAPS. Do not edit any backend.
-- `docs/PROGRESS.md` here is the build log. Read it first; update it last.
+- iOS app: `mehdin13/topgun` (cloned at `/home/user/TopGun`, Swift sources in `Top Gun/`). Port screen by screen from the SwiftUI view, its ViewModel and `Utility/NetworkManager .swift`.
+- Backend: `ncodestudio/topgun-backend` (Django REST, cloned at `/home/user/TopGun-Backend`). API root `https://api.topgunapp.com/api/v1/`. Read its serializers/views to confirm shapes. **Do not edit the backend**; log problems in `docs/BACKEND_GAPS.md`.
+- `docs/PROGRESS.md` is the build log: read it first, update it last.
+- (An earlier session wrongly built a "Dreamland" app in this repo. It is unrelated; ignore `dreamland-ios` and that history.)
 
-## Product rules (same as iOS)
-- English-only UI. Google sign-in only on Android for now (Apple needs a web flow); no passwords, no forgot-password.
-- Home: the family's own stories first, then public Discover.
-- A child's original painting never appears in public UI (Discover or shared views). The public DTO has no painting field; keep it that way.
-- Story art style follows the backend style option.
-- Stories must be saveable for offline reading (Room).
-- Support font scaling (sp), TalkBack labels, 44dp minimum tap targets.
+## Modules
+- `:core` pure Kotlin/JVM, no Android types. `TopGunApi` (all endpoints), models (kotlinx-serialization, snake_case, lenient), `ApiClient` (OkHttp, token header, 401 -> sign-out, GET retry on 429/503), `MediaUrlResolver`, `SessionStore`. Unit-tested: `./gradlew :core:test`.
+- `:app` Compose UI. Package `app.topgun.android`:
+  - `designsystem/` colors (`TG.colors`, `TGBrand`), tokens (`TGSpace`, `TGRadius`, `TGSize`), type (`TGText`), theme, `components/`.
+  - `data/` `AppContainer` (pure Kotlin DI), `UserRepository`, `AppPreferences`, `Load<T>`, `containerViewModel`.
+  - `platform/` pure-Kotlin interfaces for everything Android-only (`PlatformServices`, `PlatformUi`). Android implementations live in files whose FIRST LINE is `// ANDROID-ONLY`.
+  - `navigation/` routes + `TopGunRoot` + tab bar.
+  - `features/<name>/` one package per screen group: `XScreen` composable + `XViewModel`.
 
-## Tech stack
-- Kotlin 2.0, Jetpack Compose, Material 3, minSdk 26, MVVM (`ViewModel` + `StateFlow`), coroutines. No RxJava/LiveData in new code.
-- `:core` is a pure Kotlin/JVM module (OkHttp + kotlinx-serialization, snake_case): API client, DTOs, errors, media URL resolver, session. It has unit tests and compiles without the Android SDK. Keep Android types out of it.
-- `:app` is the Android UI. Coil for images, EncryptedSharedPreferences for the token, Navigation Compose.
-- Versions live in `gradle/libs.versions.toml`. Do not add libraries without asking.
+## Rules
+- MVVM: `ViewModel` + `StateFlow`; collect with `collectAsStateWithLifecycle()`. No LiveData/RxJava. Use `Load<T>` for loading/loaded/failed. Errors shown to people come from `ApiError.userMessage`.
+- Use `TG.colors`, `TGBrand`, `TGSpace/TGRadius/TGSize`, `TGText` for every color, size, spacing and font. No hardcoded hex/dp/sp in screens; if a value is missing, add it to the token file with the iOS source named in a comment.
+- Images only through `TGImage(path, ...)` (resolves relative `/media/...` paths). Never log tokens or personal data. Token lives only in `EncryptedTokenStore`.
+- Anything needing an Android-only library (ExoPlayer, SceneView/ARCore, Google Maps, Credential Manager, RevenueCat, Lottie, PdfRenderer, Firebase) goes behind `PlatformUi` / `PlatformServices` with the implementation in an `// ANDROID-ONLY` file. Everything else must be plain Compose so it can be type-checked.
+- Accessibility: 48dp minimum touch targets, `contentDescription` on every informative icon/image, text in `sp`.
+- English-only UI. Use `Modifier.testTag` sparingly; no `stringResource` yet (strings are literals, as in iOS).
+- Every screen composable gets a `@Preview` with fixture data when practical (fixtures in the same package under `Fixtures.kt`, never in `main` data paths used at runtime).
 
-## Design system
-- Colors come from `designsystem/DreamlandPalette.kt`, GENERATED by `tools/gen_palette.py` from the iOS `tokens.json`. Regenerate, never hand-edit.
-- Use `DL.colors`, `DL.type`, `DLSpacing`, `DLRadius`, `DLSize`, `DLLayout`, `DLMotion`. Never hardcode a color, font size, spacing or radius. If no token fits, stop and flag it.
-- Reuse components in `designsystem/components/` (`DLButton`, `DLIconButton`, `FavoriteButton`, `StoryCard`, `StoryCover`, `DLChip`, `SegmentedControl`, `RateStars`, `QuotaCard`, `DLBottomBar`, `ErrorView`, `EmptyStateView`, `LoadingView`, `SectionHeader`). One favorite behavior everywhere: `FavoriteButton` + `data/Reactions.kt`.
+## Verifying (important)
+- The Claude cloud session cannot reach `dl.google.com`, so the Android SDK/AGP/AndroidX cannot be downloaded there. Use the JVM type-check instead:
+  `tools/compose-check/check.sh` (needs Maven Central only; prints `compose-check: OK` or the Kotlin errors). It compiles `core/` + all non-`ANDROID-ONLY` app sources + shims for Android APIs in `tools/compose-check/shims/` (extend a shim if you use a new Android/AndroidX API in checked code; keep shims minimal and signature-compatible).
+- `// ANDROID-ONLY` files and `AndroidManifest.xml`/Gradle files are NOT checked: review them by eye. The first real `./gradlew :app:assembleDebug` (Android Studio or CI) may still surface errors there.
+- `:core` tests: `./gradlew :core:test` (or the scratch JVM build used in the cloud session).
+- Run `check.sh` before every commit that touches `app/`.
 
-## Backend and API
-- Base URL comes from `gradle.properties` (`dreamland.apiBaseUrl.debug|release`) into `BuildConfig.API_BASE_URL`. Never hardcode URLs or tokens in source.
-- Relative media URLs resolve against the API origin (`MediaUrlResolver`).
-- Errors: 401 clears the session (back to sign-in); 429 quota reached; 503 AI busy, retry with backoff. Never auto-retry story-generation POSTs (they spend coins).
-- Tokens only in `EncryptedTokenStore`. Never log tokens, story text, paintings or child data. Debug-only dev sign-in takes a pasted test-account token; never commit one.
-
-## Verifying
-- `:core` tests run anywhere: `./gradlew :core:test` (needs Maven Central).
-- `:app` needs the Android SDK and Google's Maven (`dl.google.com`). In the Claude cloud session that host was blocked, so `:app` was NOT compiled in session 1: expect compile errors on the first real build and fix them before adding features.
-
-## Workflow
-- Read `docs/PROGRESS.md` first. Small compilable changes. Tests for `:core` changes. Update `docs/PROGRESS.md` at the end.
-- Session reports also go in the "Dreamland Android – Development Log" Claude doc the owner asked for.
+## API facts that bite
+- Pagination `{count,next,previous,results}`; `page`, `page_size` (max 100). Throttle ~4 requests/second per user: do not fire many parallel requests; `ApiClient` retries GETs on 429.
+- Token auth `Authorization: Token <key>`; tokens expire after 180 days (401 -> sign out).
+- Media fields are relative `/media/...` (sometimes absolute); `file_3D` is `.usdz` (Apple only): see `docs/BACKEND_GAPS.md`.
+- VIP aircraft (`is_vip`) return 403 on detail unless the user is Pro; lists still include them (show a lock).
+- Favorites list items come back with `is_favorite=false` (backend bug): treat everything in the favorites list as favorite.
