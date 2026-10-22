@@ -14,9 +14,10 @@ An earlier part of this session wrongly built a "Dreamland" app here (wrong proj
 ### Screens (all ported from the iOS views; whole app passes `tools/compose-check/check.sh`)
 Home (search, categories, filter sheet, featured cards, Load More, long-press), Aircraft detail (specs, gallery, video, PDF, 3D/AR, comments, rating, VIP lock), Countries (list/map/globe/detail), Manufacturers, curated lists, Favorites, Settings (+ appearance), Blog, Badges, Intro, Splash, Sign-in (Google), Paywall. Per-area reports with differences from iOS: `docs/reports/*.md`.
 
-### Not verified
-- No Android Gradle build has run (`dl.google.com` blocked in the cloud session). `// ANDROID-ONLY` files (video, SceneView/AR, maps/globe, PDF, Google sign-in, RevenueCat, Lottie, FCM) are written against library APIs from memory and are the most likely to need fixes.
-- Nothing has run on a device; layout was matched from the Swift source, not compared visually.
+### Build status (2026-10-22)
+- GitHub Actions `Android build` compiles the whole app with the real toolchain and is green; a debug APK is attached to the pre-release `build-4`. (Only 4 compile errors needed fixing: a Gradle script import and AR extension imports.) Use CI logs as the compile check in cloud sessions; `tools/compose-check` stays as a fast pre-check.
+- Nothing has run on a device; layout was matched from the Swift source, not compared visually. Release/minified builds are untested (proguard rules may be needed).
+- Done after the screens: Google ID token is sent to the backend, Delete Account (Settings + backend `users/delete_account/`), CI workflow and `docs/CI_SETUP.md`.
 
 ### Next steps
 1. Open in Android Studio (or allow `dl.google.com`) and fix compile errors in the ANDROID-ONLY files, then `./gradlew :app:assembleDebug`.
