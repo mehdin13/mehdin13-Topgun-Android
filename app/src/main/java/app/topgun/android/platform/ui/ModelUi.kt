@@ -14,6 +14,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
+import androidx.compose.foundation.background
+import androidx.compose.ui.text.style.TextAlign
+import app.topgun.android.designsystem.TG
+import app.topgun.android.designsystem.TGSpace
+import app.topgun.android.designsystem.TGText
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.IOException
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -58,6 +68,12 @@ internal object ModelUi {
         data class Ready(val file: File) : Fetch
     }
 
+    private sealed interface Loaded {
+        data object Loading : Loaded
+        data class Failed(val reason: String) : Loaded
+        data class Ready(val instance: ModelInstance) : Loaded
+    }
+
     @Composable
     private fun rememberModelFile(url: String): Fetch {
         val context = LocalContext.current
@@ -69,42 +85,84 @@ internal object ModelUi {
         return state
     }
 
-    private fun load(loader: ModelLoader, file: File): ModelInstance? = runCatching {
+    /** Reads the file off the main thread into the direct buffer Filament needs. Throws when the file is not a glb/gltf (e.g. an HTML error page). */
+    private suspend fun readModelBuffer(file: File): ByteBuffer = withContext(Dispatchers.IO) {
         val bytes = file.readBytes()
-        val buffer = ByteBuffer.allocateDirect(bytes.size).apply { put(bytes); rewind() }
-        loader.createModelInstance(buffer)
-    }.getOrNull()
+        val isGlb = bytes.size > 12 && bytes[0] == 'g'.code.toByte() && bytes[1] == 'l'.code.toByte() && bytes[2] == 'T'.code.toByte() && bytes[3] == 'F'.code.toByte()
+        val isGltfJson = file.name.endsWith(".gltf", ignoreCase = true) && bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
+        if (!isGlb && !isGltfJson) {
+            file.delete() // do not keep a bad download in the cache
+            throw IOException("The downloaded file is not a glb model")
+        }
+        ByteBuffer.allocateDirect(bytes.size).apply { put(bytes); rewind() }
+    }
+
+    /**
+     * Filament objects must be created on the main thread; only the file read happens on IO. A model that fails to
+     * parse is reported as [Loaded.Failed] instead of crashing.
+     */
+    @Composable
+    private fun rememberModelInstance(loader: ModelLoader, file: File): Loaded =
+        produceState<Loaded>(Loaded.Loading, loader, file) {
+            value = try {
+                val buffer = readModelBuffer(file)
+                Loaded.Ready(loader.createModelInstance(buffer))
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Throwable) { // Filament throws NPE / IllegalStateException for broken assets
+                Loaded.Failed(e.message ?: "unknown error")
+            }
+        }.value
+
+    @Composable
+    private fun ErrorText(text: String, modifier: Modifier = Modifier) =
+        Text(text, style = TGText.sailecMedium(14), color = TG.colors.textSecondary, textAlign = TextAlign.Center, modifier = modifier.padding(TGSpace.l))
 
     @Composable
     fun Viewer(modelUrl: String, modifier: Modifier) {
-        Box(modifier, contentAlignment = Alignment.Center) {
+        Box(modifier.background(TG.colors.card), contentAlignment = Alignment.Center) {
             when (val fetch = rememberModelFile(modelUrl)) {
-                Fetch.Loading -> CircularProgressIndicator()
-                Fetch.Failed -> Text("Could not load the 3D model.")
+                Fetch.Loading -> CircularProgressIndicator(color = TG.colors.accent)
+                Fetch.Failed -> ErrorText("Could not download the 3D model. Check your connection, or use Open in 3D viewer.")
                 is Fetch.Ready -> {
                     val engine = rememberEngine()
                     val modelLoader = rememberModelLoader(engine)
-                    val cameraNode = rememberCameraNode(engine) { position = Float3(0f, 0f, 4f) }
-                    val instance = remember(fetch.file) { load(modelLoader, fetch.file) }
-                    if (instance == null) {
-                        Text("Could not load the 3D model.")
-                    } else {
-                        val nodes = rememberNodes {
-                            add(ModelNode(modelInstance = instance, scaleToUnits = 1.5f, autoAnimate = true))
+                    // The manipulator rebuilds the camera every frame from its own home position, so the home position
+                    // (not only cameraNode.position) must be set or the camera starts inside the model.
+                    val home = Float3(0f, 0f, CAMERA_DISTANCE)
+                    val cameraNode = rememberCameraNode(engine) { position = home }
+                    val manipulator = rememberCameraManipulator(orbitHomePosition = home, targetPosition = Float3(0f, 0f, 0f))
+                    when (val loaded = rememberModelInstance(modelLoader, fetch.file)) {
+                        Loaded.Loading -> CircularProgressIndicator(color = TG.colors.accent)
+                        is Loaded.Failed -> ErrorText("This 3D model could not be displayed (${loaded.reason}). Try Open in 3D viewer.")
+                        is Loaded.Ready -> {
+                            val nodes = rememberNodes {
+                                add(
+                                    ModelNode(modelInstance = loaded.instance, scaleToUnits = MODEL_UNITS, autoAnimate = true).apply {
+                                        // Centre the model on the orbit target: scale about the node origin, then shift by the scaled bbox centre.
+                                        val k = scale.x
+                                        position = Float3(-center.x * k, -center.y * k, -center.z * k)
+                                    },
+                                )
+                            }
+                            Scene(
+                                modifier = Modifier.fillMaxSize(),
+                                engine = engine,
+                                modelLoader = modelLoader,
+                                cameraNode = cameraNode,
+                                cameraManipulator = manipulator,
+                                childNodes = nodes,
+                            )
                         }
-                        Scene(
-                            modifier = Modifier.fillMaxSize(),
-                            engine = engine,
-                            modelLoader = modelLoader,
-                            cameraNode = cameraNode,
-                            cameraManipulator = rememberCameraManipulator(),
-                            childNodes = nodes,
-                        )
                     }
                 }
             }
         }
     }
+
+    /** Fits the longest side of the aircraft into this many Filament units (metres). */
+    private const val MODEL_UNITS = 1f
+    private const val CAMERA_DISTANCE = 2.2f
 
     @Composable
     fun Ar(modelUrl: String, modifier: Modifier, onClose: () -> Unit) {
@@ -118,11 +176,11 @@ internal object ModelUi {
 
         Box(modifier) {
             when {
-                !availability.isSupported -> Text("AR is not supported on this device.", Modifier.align(Alignment.Center))
-                !granted -> Text("Camera permission is needed to place the aircraft.", Modifier.align(Alignment.Center))
+                !availability.isSupported -> ErrorText("AR is not supported on this device.", Modifier.align(Alignment.Center))
+                !granted -> ErrorText("Camera permission is needed to place the aircraft.", Modifier.align(Alignment.Center))
                 else -> when (val fetch = rememberModelFile(modelUrl)) {
-                    Fetch.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                    Fetch.Failed -> Text("Could not load the 3D model.", Modifier.align(Alignment.Center))
+                    Fetch.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = TG.colors.accent)
+                    Fetch.Failed -> ErrorText("Could not load the 3D model.", Modifier.align(Alignment.Center))
                     is Fetch.Ready -> ArContent(fetch.file)
                 }
             }
@@ -138,7 +196,7 @@ internal object ModelUi {
         val modelLoader = rememberModelLoader(engine)
         val childNodes = rememberNodes()
         var frame by remember { mutableStateOf<Frame?>(null) }
-        val instance = remember(file) { load(modelLoader, file) }
+        val instance = (rememberModelInstance(modelLoader, file) as? Loaded.Ready)?.instance
         ARScene(
             modifier = Modifier.fillMaxSize(),
             childNodes = childNodes,

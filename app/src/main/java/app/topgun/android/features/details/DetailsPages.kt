@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.ViewInAr
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +79,7 @@ import app.topgun.android.designsystem.TGSize
 import app.topgun.android.designsystem.TGSpace
 import app.topgun.android.designsystem.TGText
 import app.topgun.android.designsystem.components.DetailCircleButton
+import app.topgun.android.designsystem.components.PageCounterPill
 import app.topgun.android.designsystem.components.EmptyState
 import app.topgun.android.designsystem.components.TGImage
 import app.topgun.android.platform.ui.LocalPlatformUi
@@ -169,6 +171,11 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
                     Spacer(Modifier.weight(1f))
                     DetailCircleButton(Icons.Filled.Close, "Close", onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
                 }
+            }
+        }
+        if (!hidden || !showChrome) {
+            Box(Modifier.align(Alignment.TopCenter).statusBarsPadding().height(TGSize.tapMin + TGSpace.s * 2), contentAlignment = Alignment.Center) {
+                PageCounterPill(pager.currentPage, images.size)
             }
         }
         if (showChrome && !hidden) {
@@ -391,21 +398,32 @@ private fun PdfPage(d: AircraftDetail, onClose: () -> Unit) {
 
 // --------------------------------------------------------------- 3D/AR
 
+/** Google Scene Viewer deep link (opens the Scene Viewer / browser handler; needs an https file URL). */
+private fun sceneViewerUrl(glbUrl: String, title: String): String =
+    "https://arvr.google.com/scene-viewer/1.0?file=" + java.net.URLEncoder.encode(glbUrl, "UTF-8") +
+        "&mode=3d_preferred&title=" + java.net.URLEncoder.encode(title, "UTF-8")
+
 private fun isGltf(url: String?): Boolean {
     val path = url?.substringBefore('?')?.lowercase() ?: return false
     return path.endsWith(".glb") || path.endsWith(".gltf")
 }
 
 /**
- * iOS `Model3DView`. The backend ships `.usdz` (Apple only); the viewer and AR are offered only for `.glb` / `.gltf`.
+ * iOS `Model3DView`. The backend ships `.usdz` (Apple only) in `file_3D` and a converted `.glb` in `file_3D_glb`;
+ * the Android viewer and AR use the glb (or a gltf) and fall back to the "not available" card when there is none.
  * Models are cached on first load by the Android viewer (cacheDir/models; Settings > Clear Cache removes them).
+ * "Open in 3D viewer" hands the same file to Google's Scene Viewer if the in-app viewer cannot show it.
  */
 @Composable
 private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
-    val url = LocalAppContainer.current.media.resolve(d.file3d)
-    val supported = isGltf(url)
+    val media = LocalAppContainer.current.media
+    val platform = LocalAppContainer.current.platform
+    val url = remember(d.fileGlb, d.file3d) {
+        listOf(d.fileGlb, d.file3d).firstNotNullOfOrNull { candidate -> media.resolve(candidate)?.takeIf { isGltf(it) } }
+    }
+    val supported = url != null
     var ar by rememberSaveable { mutableStateOf(false) }
-    if (ar && supported && url != null) {
+    if (ar && url != null) {
         LocalPlatformUi.current.ArViewer(url, Modifier.fillMaxSize(), onClose = { ar = false })
         return
     }
@@ -429,7 +447,15 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
             d.role?.takeIf { it.isNotBlank() }?.let { Text(it, style = TGText.sailecMedium(16), color = TGBrand.placeholder) }
         }
         Spacer(Modifier.weight(1f))
-        if (supported) {
+        if (url != null) {
+            OutlinedButton(
+                onClick = { platform.openUrl(sceneViewerUrl(url, d.name)) },
+                modifier = Modifier.align(Alignment.CenterHorizontally).width(TGDetailSize.modelButtonWidth).defaultMinSize(minHeight = TGSize.tapMin),
+                shape = TGDetailSize.buttonRadius,
+            ) {
+                Text("Open in 3D viewer", style = TGText.sailecMedium(16))
+            }
+            Spacer(Modifier.height(TGSpace.s))
             Button(
                 onClick = { ar = true },
                 modifier = Modifier.align(Alignment.CenterHorizontally).width(TGDetailSize.modelButtonWidth).defaultMinSize(minHeight = TGSize.tapMin),

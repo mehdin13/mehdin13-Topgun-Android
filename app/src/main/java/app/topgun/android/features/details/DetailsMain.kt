@@ -274,7 +274,7 @@ private fun QuickActions(d: AircraftDetail, a: DetailActions) {
         if (d.videoGallery.isNotEmpty()) add(Tile(Icons.Filled.VideoLibrary, "Video Gallery", "${d.videoGallery.size} videos", false, TGDetailColors.tileOrange, DetailPage.Videos))
         if (d.countriesOfOperation.isNotEmpty()) add(Tile(Icons.Filled.Shield, "Operators", "Country operation", true, TGDetailColors.tilePink, DetailPage.Operators))
         if (!d.filePdf.isNullOrBlank()) add(Tile(Icons.Filled.PictureAsPdf, "Pdf", "", true, TGDetailColors.tileCherry, DetailPage.Pdf))
-        if (!d.file3d.isNullOrBlank()) add(Tile(Icons.Filled.ViewInAr, "3D Model", "", true, TGDetailColors.tileGreen, DetailPage.Model))
+        if (!d.file3d.isNullOrBlank() || !d.fileGlb.isNullOrBlank()) add(Tile(Icons.Filled.ViewInAr, "3D Model", "", true, TGDetailColors.tileGreen, DetailPage.Model))
     }
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
         tiles.chunked(2).forEach { row ->
