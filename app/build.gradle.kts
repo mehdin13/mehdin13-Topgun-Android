@@ -48,8 +48,12 @@ android {
 
     buildTypes {
         debug {
+            // local.properties may override the API (see gradle.properties); otherwise the live API is used.
+            val localApi = Properties().apply {
+                rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+            }.getProperty("topgun.apiBaseUrl")?.trim().orEmpty()
+            buildConfigField("String", "API_BASE_URL", "\"${localApi.ifEmpty { providers.gradleProperty("topgun.apiBaseUrl.debug").get() }}\"")
             if (ciKeystore != null) signingConfig = signingConfigs.getByName("ci")
-            buildConfigField("String", "API_BASE_URL", "\"${providers.gradleProperty("topgun.apiBaseUrl.debug").get()}\"")
         }
         release {
             if (ciKeystore != null) signingConfig = signingConfigs.getByName("ci")

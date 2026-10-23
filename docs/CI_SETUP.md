@@ -69,4 +69,4 @@ topgun.googleWebClientId=<web client id>
 topgun.revenueCatKey=<goog_ key>
 topgun.mapsApiKey=<maps key>
 ```
-Android Studio signs debug builds with its own debug key: register that SHA-1 too (`./gradlew signingReport`). The debug build talks to `http://10.0.2.2:8000/api/v1/` (a local Django server); change `topgun.apiBaseUrl.debug` in `gradle.properties` to `https://api.topgunapp.com/api/v1/` to use the live API.
+Android Studio signs debug builds with its own debug key: register that SHA-1 too (`./gradlew signingReport`). Debug and release builds talk to the live API `https://api.topgunapp.com/api/v1/`. To use a local Django server instead, add `topgun.apiBaseUrl=http://10.0.2.2:8000/api/v1/` (emulator) or `http://<your computer's LAN IP>:8000/api/v1/` (phone, needs `usesCleartextTraffic` for that host) to `local.properties`.
