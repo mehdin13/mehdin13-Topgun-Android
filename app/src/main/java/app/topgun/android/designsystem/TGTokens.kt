@@ -64,6 +64,8 @@ object TGAccountSize {
     val badgeCardBackHeight = 550.dp
     val badgeCardImage = 200.dp
     val badgeCardShadow = 20.dp
+    /** ChangeIconView preview `.frame(width: 60, height: 60)` with `.clipShape(.rect(cornerRadius: 10))` (see [TGAccountRadius.blogListImage]). */
+    val iconPreview = 60.dp
 }
 
 object TGAccountRadius {
@@ -302,6 +304,14 @@ object TGDetailSize {
     val modelHeight = 350.dp
     val modelButtonWidth = 250.dp
     val buttonRadius = RoundedCornerShape(20.dp)
+    /** Android-only: Instagram-style sliding page dots (iOS `CustomIndicatorView` shows every dot; with many photos that overflows). */
+    val dotSize = 8.dp
+    val dotGap = 6.dp
+    const val dotWindow = 5
+    const val dotSelectedScale = 1.4f
+    const val dotEdgeScale = 0.5f
+    /** Android-only: play button over the YouTube thumbnail (iOS uses the system YouTube player). */
+    val playButton = 64.dp
 }
 
 /** Odd paddings used by the iOS detail screen that the shared [TGSpace] scale does not have. */

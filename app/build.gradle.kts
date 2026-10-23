@@ -26,7 +26,8 @@ android {
         val localProps = Properties().apply {
             rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
         }
-        fun key(name: String) = (localProps.getProperty(name) ?: providers.gradleProperty(name).orNull ?: "").trim()
+        // trim() and strip accidental quotes: a secret pasted as "AIza..." would otherwise break the key silently
+        fun key(name: String) = (localProps.getProperty(name) ?: providers.gradleProperty(name).orNull ?: "").trim().trim('"', '\'').trim()
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${key("topgun.googleWebClientId")}\"")
         buildConfigField("String", "REVENUECAT_API_KEY", "\"${key("topgun.revenueCatKey")}\"")
         manifestPlaceholders["mapsApiKey"] = key("topgun.mapsApiKey")

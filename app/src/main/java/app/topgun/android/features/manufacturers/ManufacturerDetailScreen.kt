@@ -150,7 +150,7 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
                 horizontalArrangement = Arrangement.spacedBy(TGSpace.l),
                 verticalArrangement = Arrangement.spacedBy(TGSpace.l),
             ) {
-                items(equipment, key = { it.id }) { plane ->
+                items(equipment.distinctBy { it.id }, key = { it.id }) { plane ->
                     // The manufacturer's aircraft rows carry no thumbnail (docs/BACKEND_GAPS.md), so the placeholder shows.
                     EquipmentCard(plane.name ?: "Unknown", null, isLocked = false, onClick = { onOpenAircraft(plane.id) })
                 }

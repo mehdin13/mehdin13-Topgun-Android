@@ -32,6 +32,9 @@ class FakePlatformServices : PlatformServices {
     override fun modelCacheInfo(): ModelCacheInfo = ModelCacheInfo(0, 0L)
     override fun clearModelCache() {}
     override fun setNotificationsEnabled(enabled: Boolean) {}
+    private var appIcon = 0
+    override fun setAppIcon(index: Int) { appIcon = index }
+    override fun currentAppIcon(): Int = appIcon
 }
 
 object FakePlatformUi : PlatformUi {

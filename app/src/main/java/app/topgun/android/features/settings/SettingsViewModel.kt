@@ -51,6 +51,21 @@ class SettingsViewModel(
 
     fun setAppearance(value: Appearance) = prefs.setAppearance(value)
 
+    private val _appIcon = MutableStateFlow(platform.currentAppIcon())
+    /** Index of the selected launcher icon (iOS `ChangeIconView.currentAppIcon`); 0 is the default. */
+    val appIcon: StateFlow<Int> = _appIcon.asStateFlow()
+
+    fun refreshAppIcon() { _appIcon.value = platform.currentAppIcon() }
+
+    fun setAppIcon(index: Int) {
+        try {
+            platform.setAppIcon(index)
+            _appIcon.value = index
+        } catch (e: Exception) {
+            _toast.value = "Couldn't change the app icon."
+        }
+    }
+
     fun restorePurchases() {
         if (_restoring.value) return
         _restoring.value = true

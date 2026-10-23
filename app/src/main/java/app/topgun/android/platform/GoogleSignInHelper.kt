@@ -10,7 +10,11 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
+import android.util.Log
 import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.GetCredentialProviderConfigurationException
+import androidx.credentials.exceptions.NoCredentialException
 import app.topgun.android.BuildConfig
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -26,6 +30,8 @@ import java.lang.ref.WeakReference
  * is configured with (GOOGLE_OAUTH_CLIENT_IDS; the web client id used here must be in that list).
  */
 class GoogleSignInHelper(private val context: Context) {
+    private companion object { const val TAG = "TopGunGoogleSignIn" }
+
     private val credentialManager = CredentialManager.create(context)
 
     init {
@@ -36,7 +42,9 @@ class GoogleSignInHelper(private val context: Context) {
     /** Returns the chosen account, or null when the user cancelled. Throws on any other failure. */
     suspend fun signIn(): GoogleAccount? {
         val clientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
-        check(clientId.isNotBlank()) { "topgun.googleWebClientId is not set in local.properties" }
+        if (clientId.isBlank()) {
+            throw GoogleSignInException(GoogleSignInException.Kind.NotConfigured, "topgun.googleWebClientId is not set")
+        }
         val activity = ForegroundActivity.current() ?: unwrapActivity(context)
             ?: error("No foreground Activity to show the Google sign-in sheet")
 
@@ -51,6 +59,15 @@ class GoogleSignInHelper(private val context: Context) {
             credentialManager.getCredential(activity, request)
         } catch (e: GetCredentialCancellationException) {
             return null
+        } catch (e: NoCredentialException) {
+            Log.w(TAG, "No credential: ${e.type}")
+            throw GoogleSignInException(GoogleSignInException.Kind.NoAccount, e.message, e)
+        } catch (e: GetCredentialProviderConfigurationException) {
+            Log.w(TAG, "Provider configuration: ${e.type}")
+            throw GoogleSignInException(GoogleSignInException.Kind.ProviderMissing, e.message, e)
+        } catch (e: GetCredentialException) {
+            Log.w(TAG, "Credential error: ${e.type} ${e.message}") // type and message only, never the credential
+            throw GoogleSignInException(GoogleSignInException.Kind.Other, "${e.type}: ${e.message}", e)
         }
 
         val credential = result.credential

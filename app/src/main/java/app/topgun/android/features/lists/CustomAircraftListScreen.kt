@@ -66,7 +66,7 @@ fun CustomAircraftListScreen(name: String, onBack: () -> Unit, onOpenAircraft: (
                     horizontalArrangement = Arrangement.spacedBy(TGSpace.m),
                     verticalArrangement = Arrangement.spacedBy(TGSpace.l),
                 ) {
-                    items(s.value.aircraftList, key = { it.id }) { aircraft ->
+                    items(s.value.aircraftList.distinctBy { it.id }, key = { it.id }) { aircraft ->
                         val locked = aircraft.isVip && !user.isPremium
                         ListAircraftCard(aircraft, locked) {
                             when {

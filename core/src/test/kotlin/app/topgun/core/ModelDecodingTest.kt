@@ -25,7 +25,7 @@ class ModelDecodingTest {
            "custom_fields": [{"field_name": "Ordnance", "field_value": "AIM-120"}],
            "average_rating": 4.5, "introduction": "2005", "national_origin": "USA", "thumbnail": "/media/aircraft_thumbnails/f22.jpg",
            "crew_size": 1, "price_million": "150.00", "generation": "5th", "status": "Active", "primary_user": "USAF",
-           "produced": "1997-2011", "number_built": 195, "file_3D": "/media/file_3D/f22.usdz", "youtube_video": null,
+           "produced": "1997-2011", "number_built": 195, "file_3D": "/media/file_3D/f22.usdz", "file_3D_glb": "/media/file_3D/f22.glb", "youtube_video": null,
            "is_vip": true, "is_favorite": true, "likes_count": 12}
         ]}
     """.trimIndent()
@@ -40,6 +40,7 @@ class ModelDecodingTest {
         // number_built arrives as a number from some rows and a string from others.
         assertEquals("195", a.numberBuilt)
         assertEquals("/media/file_3D/f22.usdz", a.file3d)
+        assertEquals("/media/file_3D/f22.glb", a.fileGlb)
         assertEquals("Ordnance", a.customFields.single().fieldName)
         assertEquals("Lockheed Martin", a.manufacturers.single().name)
         assertEquals("United States", a.manufacturers.single().country)
@@ -74,6 +75,7 @@ class ModelDecodingTest {
         assertEquals("18.8", d.priceMillion)
         assertEquals("4.50", d.autonomyHours)
         assertNull(d.file3d)
+        assertNull(d.fileGlb)
         assertEquals("/media/file_pdf/a10.pdf", d.filePdf)
         assertTrue(d.imageGallery.single().isPortrait)
         assertEquals("Su-25", d.similar.single().name)
@@ -82,6 +84,15 @@ class ModelDecodingTest {
         assertEquals(23.7275, greece.longitude)
         assertEquals("Brrrt", d.comments.single().content)
         assertEquals(listOf("CAS", "COIN"), d.missionRoles)
+    }
+
+    @Test fun decodesGlbFieldUnderBothSpellings() {
+        listOf("file_3D_glb", "file_3d_glb").forEach { key ->
+            val d = TopGunJson.decodeFromString(AircraftDetail.serializer(), """{"id": 1, "name": "X", "$key": "/media/x.glb"}""")
+            assertEquals("/media/x.glb", d.fileGlb)
+            val a = TopGunJson.decodeFromString(Aircraft.serializer(), """{"id": 1, "name": "X", "$key": "/media/x.glb"}""")
+            assertEquals("/media/x.glb", a.fileGlb)
+        }
     }
 
     @Test fun decodesCountriesAndManufacturers() {

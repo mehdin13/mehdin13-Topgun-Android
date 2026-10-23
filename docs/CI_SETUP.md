@@ -70,3 +70,15 @@ topgun.revenueCatKey=<goog_ key>
 topgun.mapsApiKey=<maps key>
 ```
 Android Studio signs debug builds with its own debug key: register that SHA-1 too (`./gradlew signingReport`). Debug and release builds talk to the live API `https://api.topgunapp.com/api/v1/`. To use a local Django server instead, add `topgun.apiBaseUrl=http://10.0.2.2:8000/api/v1/` (emulator) or `http://<your computer's LAN IP>:8000/api/v1/` (phone, needs `usesCleartextTraffic` for that host) to `local.properties`.
+
+## Troubleshooting: Google maps are blank or grey
+Symptoms: the flat map on "Top Countries" or the operators map on an aircraft shows nothing, only the grey grid, or after about 12 seconds the in-app message "The map could not be loaded...". (The globe does not use Google Maps and keeps working.)
+
+1. **"Google Maps key missing" in the app**: the build had no `topgun.mapsApiKey`. In CI check that the secret `MAPS_API_KEY` exists (no quotes, no spaces) and rebuild; locally add `topgun.mapsApiKey=<key>` to `local.properties`.
+2. **Enable the API**: Google Cloud console -> APIs & Services -> Library -> **Maps SDK for Android** -> Enable (not only "Maps JavaScript API" or "Places").
+3. **Billing**: the Google Cloud project must have a billing account linked (Maps has a free monthly credit, but without billing the map stays blank).
+4. **Key restrictions**: APIs & Services -> Credentials -> your key -> Application restrictions = *Android apps* must list package `app.topgun.android` with the SHA-1 of the certificate that signed the installed APK. The CI-signed APK is `FB:BF:FA:F7:6A:A1:42:E3:D5:D2:24:D6:20:65:82:55:09:F6:85:00` (a local Android Studio debug build has a different SHA-1: `./gradlew signingReport`). API restrictions must include **Maps SDK for Android**. Changes can take a few minutes to apply.
+5. **Read Logcat** (filter `tag:Google` or search for `Maps`) while opening the map:
+   - `Authorization failure. Please see https://developers.google.com/maps/documentation/android-sdk/start` followed by `Ensure that the "Maps SDK for Android" is enabled` and `Ensure that the following Android Key exists: API Key: ... Android Application (<cert_fingerprint>;<package>): ...` -> the SHA-1 or package in that line is not in the key restriction (add exactly that pair), or the SDK is not enabled.
+   - `API key not found. Check that <meta-data android:name="com.google.android.geo.API_KEY" android:value="API_KEY"/> is in the <application> element of AndroidManifest.xml` -> the key was empty at build time (see 1).
+   - `This API project is not authorized to use this API` / `BillingNotEnabledMapError` -> steps 2 and 3.

@@ -21,6 +21,19 @@ sealed interface ProStatus {
     data class Pro(val days: Int) : ProStatus
 }
 
+/** Why the Google account step failed, so the sign-in screen can say what to fix (and tell it apart from a server problem). */
+class GoogleSignInException(val kind: Kind, message: String?, cause: Throwable? = null) : Exception(message, cause) {
+    enum class Kind {
+        /** The build has no Google web client ID (GOOGLE_WEB_CLIENT_ID secret / topgun.googleWebClientId). */
+        NotConfigured,
+        /** Google found no usable account/credential: no Google account on the phone, or the Android OAuth client (package + SHA-1) does not match this APK. */
+        NoAccount,
+        /** Google Play services / Credential Manager provider is missing or too old. */
+        ProviderMissing,
+        Other,
+    }
+}
+
 interface PlatformServices {
     /** Shows the Google account picker (Credential Manager). Returns null when the user cancels. Throws on failure. */
     suspend fun signInWithGoogle(): GoogleAccount?
@@ -40,6 +53,13 @@ interface PlatformServices {
     fun modelCacheInfo(): ModelCacheInfo
     fun clearModelCache()
     fun setNotificationsEnabled(enabled: Boolean)
+
+    /**
+     * Launcher icon switching (iOS Settings > Change App icon). Index 0 is the default icon, 1..4 the alternates
+     * (iOS AppIcon1..4). Android implements this with one activity-alias per icon; the launcher may take a few seconds to refresh.
+     */
+    fun setAppIcon(index: Int)
+    fun currentAppIcon(): Int
 }
 
 data class ModelCacheInfo(val fileCount: Int, val bytes: Long)

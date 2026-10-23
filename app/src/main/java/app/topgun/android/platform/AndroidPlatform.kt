@@ -1,8 +1,10 @@
 // ANDROID-ONLY
 package app.topgun.android.platform
 
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.VibrationEffect
 import android.os.Vibrator
@@ -43,6 +45,33 @@ class AndroidPlatform(private val context: Context) : PlatformServices {
     override fun modelCacheInfo(): ModelCacheInfo = models.info()
     override fun clearModelCache() = models.clear()
     override fun setNotificationsEnabled(enabled: Boolean) { /* TODO(port): FCM topic subscribe/unsubscribe */ }
+
+    /** One activity-alias per launcher icon (see AndroidManifest.xml); exactly one is enabled. */
+    private val iconAliases = listOf("IconDefault", "IconAlt1", "IconAlt2", "IconAlt3", "IconAlt4")
+
+    private fun aliasComponent(index: Int) = ComponentName(context, "app.topgun.android.${iconAliases[index]}")
+
+    override fun setAppIcon(index: Int) {
+        if (index !in iconAliases.indices) return
+        val pm = context.packageManager
+        // Enable the chosen alias first so the app is never left without a launcher entry.
+        pm.setComponentEnabledSetting(aliasComponent(index), PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP)
+        iconAliases.indices.filter { it != index }.forEach {
+            pm.setComponentEnabledSetting(aliasComponent(it), PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP)
+        }
+    }
+
+    override fun currentAppIcon(): Int {
+        val pm = context.packageManager
+        val enabled = iconAliases.indices.firstOrNull {
+            when (pm.getComponentEnabledSetting(aliasComponent(it))) {
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+                PackageManager.COMPONENT_ENABLED_STATE_DEFAULT -> it == 0 // manifest default: only the first alias is enabled
+                else -> false
+            }
+        }
+        return enabled ?: 0
+    }
 
     private fun start(intent: Intent) {
         runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }

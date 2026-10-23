@@ -58,6 +58,8 @@ internal object HomeFixtures {
             override fun modelCacheInfo(): ModelCacheInfo = ModelCacheInfo(0, 0L)
             override fun clearModelCache() {}
             override fun setNotificationsEnabled(enabled: Boolean) {}
+            override fun setAppIcon(index: Int) {}
+            override fun currentAppIcon(): Int = 0
         },
     )
 }

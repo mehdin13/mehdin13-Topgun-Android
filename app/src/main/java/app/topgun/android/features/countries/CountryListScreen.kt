@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -84,7 +85,9 @@ fun CountryListContent(
         )
         when (state.mode) {
             CountryViewMode.Grid -> GridBody(state, onOpenCountry, onLoadMore, onRetry)
-            else -> MapBody(state, state.mode == CountryViewMode.Globe, onOpenCountry, onRetryMap)
+            else -> Box(Modifier.weight(1f).fillMaxWidth()) {
+                MapBody(state, state.mode == CountryViewMode.Globe, onOpenCountry, onRetryMap)
+            }
         }
     }
 }
@@ -96,6 +99,8 @@ private fun ModeButton(icon: ImageVector, description: String, selected: Boolean
 
 @Composable
 private fun GridBody(state: CountryListState, onOpenCountry: (Int) -> Unit, onLoadMore: () -> Unit, onRetry: () -> Unit) {
+    // Defensive: repeated ids would crash the lazy grid (the view model already drops them).
+    val grid = remember(state.countries) { state.countries.distinctBy { it.id } }
     when (val initial = state.initial) {
         Load.Loading -> LoadingState("Loading countries...")
         is Load.Failed -> ErrorState(initial.error.userMessage, onRetry = onRetry)
@@ -109,13 +114,13 @@ private fun GridBody(state: CountryListState, onOpenCountry: (Int) -> Unit, onLo
                 horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
                 verticalArrangement = Arrangement.spacedBy(TGSpace.m),
             ) {
-                itemsIndexed(state.countries, key = { _, country -> country.id }) { index, country ->
+                itemsIndexed(grid, key = { _, country -> country.id }) { index, country ->
                     FeaturedCard(
                         name = country.name, iconPath = country.flagIcon ?: country.icon, coverPath = country.cover,
                         code = country.code, onClick = { onOpenCountry(country.id) },
                     )
-                    if (index == state.countries.lastIndex && state.hasMore) {
-                        LaunchedEffect(state.countries.size) { onLoadMore() }
+                    if (index == grid.lastIndex && state.hasMore) {
+                        LaunchedEffect(grid.size) { onLoadMore() }
                     }
                 }
                 if (state.isLoadingMore) {
@@ -138,6 +143,7 @@ private fun MapBody(state: CountryListState, globe: Boolean, onOpenCountry: (Int
         is Load.Loaded -> {
             val q = state.query.trim()
             val shown = if (q.isEmpty()) all.value else all.value.filter { it.name.contains(q, ignoreCase = true) }
+            if (shown.none { it.latitude != null && it.longitude != null }) EmptyState("No countries with a location") else
             CountryMapPanel(shown, globe, onOpenCountry, Modifier.fillMaxSize())
         }
     }

@@ -166,7 +166,7 @@ fun CountryDetailContent(
                 horizontalArrangement = Arrangement.spacedBy(TGSpace.l),
                 verticalArrangement = Arrangement.spacedBy(TGSpace.l),
             ) {
-                items(planes, key = { it.id }) { plane ->
+                items(planes.distinctBy { it.id }, key = { it.id }) { plane ->
                     // iOS locks every card for free users here (a placeholder until the API sends is_vip); the
                     // row has no is_vip field, so Android opens the detail and lets it handle the Pro lock.
                     EquipmentCard(plane.name, plane.thumbnail, isLocked = false, onClick = { onOpenAircraft(plane.id) })
@@ -183,7 +183,7 @@ fun CountryDetailContent(
                 contentPadding = PaddingValues(start = TGSpace.l, end = TGSpace.l, top = TGSpace.m, bottom = TGSpace.xxl),
                 horizontalArrangement = Arrangement.spacedBy(TGSpace.l),
             ) {
-                items(country.manufacturers, key = { it.id }) { m -> ManufacturerWideCard(m) { onOpenManufacturer(m.id) } }
+                items(country.manufacturers.distinctBy { it.id }, key = { it.id }) { m -> ManufacturerWideCard(m) { onOpenManufacturer(m.id) } }
             }
         }
         Box(Modifier.height(TGSpace.xxl))

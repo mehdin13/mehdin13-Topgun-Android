@@ -77,7 +77,7 @@ fun ManufacturerListScreen(onBack: () -> Unit, onOpenManufacturer: (Int) -> Unit
                             Text("Leading global aerospace brands", style = TGText.sailecRegular(14), color = TG.colors.textSecondary)
                         }
                     }
-                    items(s.value, key = { it.id }) { m -> ManufacturerCard(m) { onOpenManufacturer(m.id) } }
+                    items(s.value.distinctBy { it.id }, key = { it.id }) { m -> ManufacturerCard(m) { onOpenManufacturer(m.id) } }
                 }
             }
         }

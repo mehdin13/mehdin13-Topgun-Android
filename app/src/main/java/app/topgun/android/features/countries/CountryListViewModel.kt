@@ -62,7 +62,7 @@ class CountryListViewModel(private val api: TopGunApi) : ViewModel() {
         val name = _state.value.query.trim().ifEmpty { null }
         loadJob = viewModelScope.launch {
             when (val r = loading { api.countries(1, PAGE_SIZE, name) }) {
-                is Load.Loaded -> _state.update { it.copy(initial = Load.Loaded(Unit), countries = r.value.results, hasMore = r.value.hasNext) }
+                is Load.Loaded -> _state.update { it.copy(initial = Load.Loaded(Unit), countries = r.value.results.distinctBy { c -> c.id }, hasMore = r.value.hasNext) }
                 is Load.Failed -> _state.update { it.copy(initial = r) }
                 Load.Loading -> Unit
             }
@@ -74,12 +74,27 @@ class CountryListViewModel(private val api: TopGunApi) : ViewModel() {
         if (s.isLoadingMore || !s.hasMore || s.initial !is Load.Loaded) return
         _state.update { it.copy(isLoadingMore = true) }
         val name = s.query.trim().ifEmpty { null }
-        val next = page + 1
         loadJob = viewModelScope.launch {
             try {
-                val r = api.countries(next, PAGE_SIZE, name)
-                page = next
-                _state.update { it.copy(countries = it.countries + r.results, hasMore = r.hasNext, isLoadingMore = false) }
+                // The API orders by -aircraft_count with no tie-break, so a later page can repeat a country already
+                // shown: drop repeats (duplicate LazyGrid keys crash) and skip ahead if a page adds nothing new.
+                var next = page + 1
+                var shown = s.countries
+                var hasNext: Boolean
+                while (true) {
+                    val r = api.countries(next, PAGE_SIZE, name)
+                    page = next
+                    hasNext = r.hasNext
+                    val seen = shown.mapTo(HashSet()) { c -> c.id }
+                    val fresh = r.results.filter { c -> seen.add(c.id) }
+                    shown = shown + fresh
+                    if (fresh.isNotEmpty() || !hasNext) break
+                    next++
+                    delay(MAP_PAGE_GAP_MS)
+                }
+                val result = shown
+                val more = hasNext
+                _state.update { it.copy(countries = result, hasMore = more, isLoadingMore = false) }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Throwable) {
@@ -104,7 +119,7 @@ class CountryListViewModel(private val api: TopGunApi) : ViewModel() {
                     p++
                     delay(MAP_PAGE_GAP_MS)
                 }
-                _state.update { it.copy(mapCountries = Load.Loaded(all)) }
+                _state.update { it.copy(mapCountries = Load.Loaded(all.distinctBy { c -> c.id })) }
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Throwable) {

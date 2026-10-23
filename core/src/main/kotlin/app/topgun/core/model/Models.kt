@@ -73,6 +73,8 @@ data class Aircraft(
     @Serializable(with = FlexString::class) val produced: String? = null,
     @Serializable(with = FlexString::class) val numberBuilt: String? = null,
     @JsonNames("file_3D") val file3d: String? = null,
+    /** Android-loadable glb conversion of [file3d] (backend field `file_3D_glb`, serializer variants accepted). */
+    @JsonNames("file_3D_glb", "file_3d_glb") val fileGlb: String? = null,
     val youtubeVideo: String? = null,
     /** VIP aircraft open only for Pro members (403 from the detail endpoint otherwise). */
     val isVip: Boolean = false,
@@ -187,6 +189,8 @@ data class AircraftDetail(
     val thumbnail: String? = null,
     val icon: String? = null,
     @JsonNames("file_3D") val file3d: String? = null,
+    /** Android-loadable glb conversion of [file3d] (backend field `file_3D_glb`, serializer variants accepted). */
+    @JsonNames("file_3D_glb", "file_3d_glb") val fileGlb: String? = null,
     val filePdf: String? = null,
     val youtubeVideo: String? = null,
     val status: String? = null,

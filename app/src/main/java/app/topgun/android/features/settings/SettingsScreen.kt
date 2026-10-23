@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Delete
@@ -97,23 +98,29 @@ fun SettingsScreen(onOpenBlog: () -> Unit, onOpenBadges: () -> Unit, onShowSignI
     val cache by vm.cache.collectAsStateWithLifecycle()
     val restoring by vm.restoring.collectAsStateWithLifecycle()
     val toast by vm.toast.collectAsStateWithLifecycle()
+    val appIcon by vm.appIcon.collectAsStateWithLifecycle()
     val platform = container.platform
 
     var showTheme by rememberSaveable { mutableStateOf(false) }
+    var showAppIcon by rememberSaveable { mutableStateOf(false) }
     var confirmClear by rememberSaveable { mutableStateOf(false) }
     var confirmLogout by rememberSaveable { mutableStateOf(false) }
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
     val deleting by vm.deleting.collectAsStateWithLifecycle()
     val snackbar = remember { SnackbarHostState() }
 
-    BackHandler(enabled = showTheme) { showTheme = false }
-    LaunchedEffect(Unit) { vm.refreshCache() }          // iOS `.onAppear { updateCacheInfo() }`
+    BackHandler(enabled = showTheme || showAppIcon) { showTheme = false; showAppIcon = false }
+    LaunchedEffect(Unit) { vm.refreshCache(); vm.refreshAppIcon() }          // iOS `.onAppear { updateCacheInfo() }`
     LaunchedEffect(toast) {
         toast?.let { snackbar.showSnackbar(it); vm.dismissToast() }
     }
 
     if (showTheme) {
         ThemeScreen(onBack = { showTheme = false }, onSelect = vm::setAppearance)
+        return
+    }
+    if (showAppIcon) {
+        AppIconScreen(selected = appIcon, onBack = { showAppIcon = false }, onSelect = vm::setAppIcon)
         return
     }
 
@@ -186,8 +193,8 @@ fun SettingsScreen(onOpenBlog: () -> Unit, onOpenBadges: () -> Unit, onShowSignI
                 )
             }
 
-            // iOS also has "Change App icon" here; Android cannot switch the launcher icon at runtime, so it is left out.
             SettingsSection("Theme") {
+                SettingsRow(Icons.Filled.Apps, TGBrand.blue, "Change App icon", onClick = { showAppIcon = true }, trailing = { SettingsChevron() })
                 SettingsRow(Icons.Filled.Palette, TGAccountColors.systemYellow, "Change Theme", showDivider = false, onClick = { showTheme = true }, trailing = { SettingsChevron() })
             }
 

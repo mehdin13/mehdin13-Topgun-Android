@@ -47,6 +47,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -80,6 +81,8 @@ import app.topgun.android.designsystem.TGText
 import app.topgun.android.designsystem.components.AircraftListCard
 import app.topgun.android.designsystem.components.DetailActionTile
 import app.topgun.android.designsystem.components.DetailCircleButton
+import app.topgun.android.designsystem.components.SlidingDotsIndicator
+import app.topgun.android.platform.ui.youTubeVideoId
 import app.topgun.android.designsystem.components.DetailHeading
 import app.topgun.android.designsystem.components.DetailInfoCell
 import app.topgun.android.designsystem.components.DetailPill
@@ -355,22 +358,31 @@ private fun CardDeck(images: List<ImageGalleryItem>, onOpen: (Int) -> Unit) {
                 modifier = Modifier.fillMaxWidth().aspectRatio(TGDetailSize.deckAspect).clip(TGDetailSize.deckRadius).clickable(role = Role.Button) { onOpen(index) },
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(TGSpace.xs)) {
-            images.indices.forEach { i ->
-                Box(Modifier.size(TGSpace.s).background(if (i == pager.currentPage) TG.colors.accent else TGBrand.gray, CircleShape))
-            }
-        }
+        SlidingDotsIndicator(images.size, pager.currentPage + pager.currentPageOffsetFraction)
     }
 }
 
 // --------------------------------------------------------------- video
+
+/** A clean watch link for the YouTube app/browser; the stored link when no id can be parsed. */
+private fun watchUrl(link: String): String {
+    val id = youTubeVideoId(link)
+    return if (id != null) "https://www.youtube.com/watch?v=$id" else if (link.contains("://")) link else "https://$link"
+}
 
 @Composable
 private fun VideoSection(link: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
         DetailHeading("Video", R.drawable.card, Modifier.fillMaxWidth())
         if (!link.isNullOrBlank()) {
+            val platform = LocalAppContainer.current.platform
             LocalPlatformUi.current.YouTubePlayer(link, Modifier.fillMaxWidth().height(TGDetailSize.mediaHeight).clip(TGDetailSize.mediaRadius))
+            // Always offered, so people are never stuck when the embed refuses to play.
+            OutlinedButton(
+                onClick = { platform.openUrl(watchUrl(link)) },
+                modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = TGSize.tapMin),
+                shape = TGDetailSize.buttonRadius,
+            ) { Text("Watch on YouTube", style = TGText.sailecMedium(16)) }
         } else {
             Text("No YouTube video available.", style = TGText.sailecRegular(14), color = TGBrand.placeholder)
         }
