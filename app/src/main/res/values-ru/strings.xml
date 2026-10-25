@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Язык</string>
+    <string name="language_system_default">Как в системе</string>
+    <string name="selected">Выбрано</string>
+    <string name="not_selected">Не выбрано</string>
+</resources>

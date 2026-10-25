@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Dil</string>
+    <string name="language_system_default">Sistem varsayılanı</string>
+    <string name="selected">Seçili</string>
+    <string name="not_selected">Seçili değil</string>
+</resources>

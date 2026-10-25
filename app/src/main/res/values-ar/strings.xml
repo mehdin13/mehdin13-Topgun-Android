@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">اللغة</string>
+    <string name="language_system_default">افتراضي النظام</string>
+    <string name="selected">محدد</string>
+    <string name="not_selected">غير محدد</string>
+</resources>

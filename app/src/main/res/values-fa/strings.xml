@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">زبان</string>
+    <string name="language_system_default">پیش‌فرض سیستم</string>
+    <string name="selected">انتخاب‌شده</string>
+    <string name="not_selected">انتخاب‌نشده</string>
+</resources>

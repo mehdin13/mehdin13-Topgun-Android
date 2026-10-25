@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Langue</string>
+    <string name="language_system_default">Par défaut du système</string>
+    <string name="selected">Sélectionné</string>
+    <string name="not_selected">Non sélectionné</string>
+</resources>
