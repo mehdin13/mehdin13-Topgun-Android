@@ -12,7 +12,7 @@ object TGSpace {
     val xl = 24.dp
     val xxl = 32.dp
     /** Space reserved at the bottom of scrolling screens so content clears the floating tab bar. */
-    val tabBarClearance = 150.dp
+    val tabBarClearance = 16.dp   // simple bottom bar sits below content
 }
 
 object TGRadius {

@@ -1,7 +1,9 @@
 package app.topgun.android.navigation
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -124,7 +126,7 @@ fun TopGunRoot() {
     }
 }
 
-/** The three tabs (Home, Favorites, Settings) with the floating rounded tab bar. */
+/** The three tabs (Home, Favorites, Settings) with a plain bottom navigation bar. */
 @Composable
 private fun MainShell(
     onOpenAircraft: (Int) -> Unit,
@@ -137,15 +139,14 @@ private fun MainShell(
     onShowPaywall: () -> Unit,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    var tabBarVisible by remember { mutableStateOf(true) }
-    Box(Modifier.fillMaxSize().background(TG.colors.background), contentAlignment = Alignment.BottomCenter) {
-        Box(Modifier.fillMaxSize()) {
+    Column(Modifier.fillMaxSize().background(TG.colors.background)) {
+        Box(Modifier.weight(1f).fillMaxWidth()) {
             when (tab) {
-                0 -> HomeScreen(onOpenAircraft, onOpenCountries, onOpenManufacturers, onOpenList, onShowSignIn, onShowPaywall, onSetTabBarVisible = { tabBarVisible = it })
+                0 -> HomeScreen(onOpenAircraft, onOpenCountries, onOpenManufacturers, onOpenList, onShowSignIn, onShowPaywall, onSetTabBarVisible = {})
                 1 -> FavoritesScreen(onOpenAircraft, onShowSignIn, onShowPaywall)
                 else -> SettingsScreen(onOpenBlog, onOpenBadges, onShowSignIn, onShowPaywall)
             }
         }
-        TopGunTabBar(selected = tab, onSelect = { tab = it; tabBarVisible = true }, visible = tabBarVisible)
+        TopGunTabBar(selected = tab, onSelect = { tab = it })
     }
 }
