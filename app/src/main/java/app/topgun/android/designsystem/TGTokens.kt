@@ -336,3 +336,13 @@ object TGDetailSpace {
     val headerButtonSide = 24.dp
     val bottomClear = 150.dp
 }
+
+/** Android-only: loading and error states of [app.topgun.android.designsystem.components.TGLoadingImage]. */
+object TGImageState {
+    val spinner = 28.dp
+    val spinnerStroke = 3.dp
+    val retryIcon = 28.dp
+    /** Below this height (thumbnails) the error state shows only the retry icon, without the caption. */
+    val captionMinHeight = 120.dp
+    const val crossfade = true
+}

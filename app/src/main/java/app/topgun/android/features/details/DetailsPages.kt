@@ -81,7 +81,7 @@ import app.topgun.android.designsystem.TGText
 import app.topgun.android.designsystem.components.DetailCircleButton
 import app.topgun.android.designsystem.components.PageCounterPill
 import app.topgun.android.designsystem.components.EmptyState
-import app.topgun.android.designsystem.components.TGImage
+import app.topgun.android.designsystem.components.TGLoadingImage
 import app.topgun.android.platform.ui.LocalPlatformUi
 import app.topgun.core.model.AircraftDetail
 import app.topgun.core.model.ImageGalleryItem
@@ -132,7 +132,7 @@ private fun ZoomableImage(path: String, description: String) {
             }
             .graphicsLayer(scaleX = scale, scaleY = scale, translationX = offset.x, translationY = offset.y),
     ) {
-        TGImage(path, contentDescription = description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+        TGLoadingImage(path, contentDescription = description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
     }
 }
 
@@ -188,7 +188,7 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
             ) {
                 itemsIndexed(images) { i, img ->
                     val selected = i == pager.currentPage
-                    TGImage(
+                    TGLoadingImage(
                         img.image, contentDescription = "Photo ${i + 1}",
                         modifier = Modifier.size(TGDetailSize.thumbWidth, TGDetailSize.thumbHeight).clip(TGDetailSize.thumbRadius)
                             .border(if (selected) TGDetailSpace.hair else TGDetailSpace.zero, TGDetailColors.onPhoto, TGDetailSize.thumbRadius)
@@ -254,7 +254,7 @@ private fun SpecsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Unit) 
             if (d.sketches.isNotEmpty()) {
                 val pager = rememberPagerState(pageCount = { d.sketches.size })
                 HorizontalPager(pager, Modifier.fillMaxWidth().height(TGDetailSize.sketchHeight)) { i ->
-                    TGImage(d.sketches[i].file, contentDescription = d.sketches[i].name.ifBlank { "Sketch ${i + 1}" }, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                    TGLoadingImage(d.sketches[i].file, contentDescription = d.sketches[i].name.ifBlank { "Sketch ${i + 1}" }, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
                 }
             }
             SpecSection("General Specifications:")

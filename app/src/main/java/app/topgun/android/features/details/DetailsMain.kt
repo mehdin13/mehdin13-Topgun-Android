@@ -99,6 +99,7 @@ import app.topgun.android.designsystem.components.DetailInfoCell
 import app.topgun.android.designsystem.components.DetailPill
 import app.topgun.android.designsystem.components.DetailStars
 import app.topgun.android.designsystem.components.TGImage
+import app.topgun.android.designsystem.components.TGLoadingImage
 import app.topgun.android.platform.ui.LocalPlatformUi
 import app.topgun.android.platform.ui.MapPin
 import app.topgun.core.model.AircraftDetail
@@ -364,7 +365,7 @@ private fun CardDeck(images: List<ImageGalleryItem>, onOpen: (Int) -> Unit) {
             contentPadding = PaddingValues(horizontal = TGDetailSize.deckPeek),
             pageSpacing = TGSpace.m,
         ) { index ->
-            TGImage(
+            TGLoadingImage(
                 images[index].image, contentDescription = "Aircraft photo ${index + 1} of ${images.size}",
                 modifier = Modifier.fillMaxWidth().aspectRatio(TGDetailSize.deckAspect).clip(TGDetailSize.deckRadius).clickable(role = Role.Button) { onOpen(index) },
             )
