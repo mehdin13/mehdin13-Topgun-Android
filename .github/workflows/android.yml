@@ -73,7 +73,16 @@ jobs:
       - name: Print the signing certificate SHA-1 (register it in Google Cloud for Google sign-in)
         run: |
           APK=$(ls app/build/outputs/apk/debug/*.apk | head -1)
-          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$APK" | grep -E "SHA-(1|256) digest" || true
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          CERTS=$("$APKSIGNER" verify --print-certs "$APK" | grep -E "certificate (SHA-1|SHA-256) digest" || true)
+          echo "$CERTS"
+          {
+            echo "### APK signing certificate"
+            echo "Register the SHA-1 in Google Cloud (Android OAuth client + Maps key restriction):"
+            echo '```'
+            echo "$CERTS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v4
         with:
