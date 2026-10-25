@@ -35,3 +35,7 @@ Found while porting to Android (2026-10-22), from reading the Django source and 
 22. **P – Heavy list rows.** `country/` returns each country's full `aircraft_list` and `manufacturers` on every list row, and country ordering by `-aircraft_count` has no tie-break, so pages can repeat or skip rows. Country/manufacturer `aircraft_list` rows have no `thumbnail` or `is_vip`.
 23. **C – Likes and comments.** The detail response has no `is_liked`; the like reply has no total. Comments use two different models (list/post `Comment` vs embedded `AircraftComment`) and only a user id is available to show an author.
 24. **P – Badges** may never be awarded (gaps 4 and 10).
+
+## Added with the 3D download / operators batch
+25. **P – 3D download progress needs `Content-Length`.** The Android download shows a percentage only when the media server sends `Content-Length` for `.glb` files (and does not gzip them; the app requests `Accept-Encoding: identity`). If a CDN/proxy answers chunked, the app shows an indeterminate bar with the bytes so far. Also useful: a `file_3D_glb_size` field so the details page can show the size before the download starts.
+26. **B – `countries_of_operation` is N+1.** `DetailAircraftSerializer.get_countries_of_operation` runs one `Aircraft.objects.filter(...).count()` per country on every detail request; annotate the count once instead.

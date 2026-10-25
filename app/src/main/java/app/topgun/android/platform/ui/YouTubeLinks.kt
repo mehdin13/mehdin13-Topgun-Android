@@ -32,3 +32,6 @@ fun youTubeVideoId(link: String?): String? {
 
 /** `https://img.youtube.com/vi/<id>/hqdefault.jpg` */
 fun youTubeThumbnailUrl(id: String): String = "https://img.youtube.com/vi/$id/hqdefault.jpg"
+
+/** `https://www.youtube.com/watch?v=<id>`: opens in the YouTube app when installed, else the browser. */
+fun youTubeWatchUrl(id: String): String = "https://www.youtube.com/watch?v=$id"

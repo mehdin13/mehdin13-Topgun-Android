@@ -16,7 +16,7 @@ import android.os.Vibrator
 class AndroidPlatform(private val context: Context) : PlatformServices {
     private val google = GoogleSignInHelper(context)
     private val billing = BillingHelper(context)
-    private val models = ModelCache(context)
+    private val models = ModelCache.get(context)
 
     override suspend fun signInWithGoogle(): GoogleAccount? = google.signIn()
     override suspend fun signOutGoogle() = google.signOut()
@@ -44,6 +44,7 @@ class AndroidPlatform(private val context: Context) : PlatformServices {
 
     override fun modelCacheInfo(): ModelCacheInfo = models.info()
     override fun clearModelCache() = models.clear()
+    override val modelDownloads: ModelDownloads get() = models
     override fun setNotificationsEnabled(enabled: Boolean) { /* TODO(port): FCM topic subscribe/unsubscribe */ }
 
     /** One activity-alias per launcher icon (see AndroidManifest.xml); exactly one is enabled. */

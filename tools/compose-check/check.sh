@@ -27,7 +27,7 @@ for d in sorted(os.listdir(res)):
     for f in os.listdir(p):
         name = f.split('.')[0]
         if kind == 'values':
-            if f == 'strings.xml':
+            if f.startswith('strings') and f.endswith('.xml'):
                 for m in re.finditer(r'<(?:string|plurals|string-array) name="([^"]+)"', open(os.path.join(p, f)).read()):
                     kinds.setdefault('string', set()).add(m.group(1))
             continue

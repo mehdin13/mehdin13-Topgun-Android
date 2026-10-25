@@ -22,6 +22,7 @@ purchases = "8.10.1"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 browser = "1.8.0"
+youtubePlayer = "12.1.0"
 junit = "4.13.2"
 
 [libraries]
@@ -45,6 +46,7 @@ androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
+youtube-player = { module = "com.pierfrancescosoffritti.androidyoutubeplayer:core", version.ref = "youtubePlayer" }
 coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }

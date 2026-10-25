@@ -5,21 +5,31 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.foundation.background
 import androidx.compose.ui.text.style.TextAlign
 import app.topgun.android.designsystem.TG
 import app.topgun.android.designsystem.TGSpace
+import app.topgun.android.designsystem.TGSize
 import app.topgun.android.designsystem.TGText
+import app.topgun.android.designsystem.components.ModelDownloadProgress
+import app.topgun.android.platform.ModelDownloadState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,10 +73,14 @@ import java.nio.ByteBuffer
  */
 internal object ModelUi {
     private sealed interface Fetch {
-        data object Loading : Fetch
-        data object Failed : Fetch
+        /** [progress] is the live download state (bytes read / Content-Length); null before the first update. */
+        data class Loading(val progress: ModelDownloadState.Downloading?) : Fetch
+        class Failed(val message: String?, val retry: () -> Unit) : Fetch
         data class Ready(val file: File) : Fetch
     }
+
+    /** The downloaded file is not a glb/gltf (for example an HTML error page). */
+    private class BadModelFile : IOException("The downloaded file is not a glb model")
 
     private sealed interface Loaded {
         data object Loading : Loaded
@@ -74,15 +88,50 @@ internal object ModelUi {
         data class Ready(val instance: ModelInstance) : Loaded
     }
 
+    /**
+     * Gets the model through the shared [ModelCache]: a downloaded file is used at once, otherwise it is downloaded and
+     * the live progress is reported as [Fetch.Loading]. Leaving the screen stops a download that only the viewer started.
+     */
     @Composable
     private fun rememberModelFile(url: String): Fetch {
-        val context = LocalContext.current
-        var state by remember(url) { mutableStateOf<Fetch>(Fetch.Loading) }
-        LaunchedEffect(url) {
-            val file = ModelCache(context.applicationContext).fetch(url)
-            state = if (file != null) Fetch.Ready(file) else Fetch.Failed
+        val cache = ModelCache.get(LocalContext.current)
+        var attempt by remember(url) { mutableIntStateOf(0) }
+        var file by remember(url, attempt) { mutableStateOf<File?>(null) }
+        var failed by remember(url, attempt) { mutableStateOf(false) }
+        val state by remember(url) { cache.state(url) }.collectAsState()
+        LaunchedEffect(url, attempt) {
+            val result = cache.fetch(url)
+            file = result
+            failed = result == null
         }
-        return state
+        DisposableEffect(url) { onDispose { cache.release(url) } }
+        val ready = file
+        return when {
+            ready != null -> Fetch.Ready(ready)
+            failed -> Fetch.Failed((state as? ModelDownloadState.Failed)?.message) { attempt++ }
+            else -> Fetch.Loading(state as? ModelDownloadState.Downloading)
+        }
+    }
+
+    /** Download progress with percentage, or an indeterminate spinner when no download is running (e.g. reading the file). */
+    @Composable
+    private fun LoadingModel(progress: ModelDownloadState.Downloading?, modifier: Modifier = Modifier) {
+        if (progress != null) {
+            ModelDownloadProgress(progress, modifier.padding(horizontal = TGSpace.xl))
+        } else {
+            Column(modifier.padding(TGSpace.l), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
+                CircularProgressIndicator(color = TG.colors.accent)
+                Text("Preparing 3D model…", style = TGText.sailecMedium(14), color = TG.colors.textSecondary)
+            }
+        }
+    }
+
+    @Composable
+    private fun DownloadFailed(fetch: Fetch.Failed, modifier: Modifier = Modifier) {
+        Column(modifier.padding(TGSpace.l), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.m)) {
+            ErrorText("Could not download the 3D model. Check your connection and try again, or use Open in 3D viewer." + (fetch.message?.let { " ($it)" } ?: ""))
+            Button(onClick = fetch.retry, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin)) { Text("Try again", style = TGText.sailecMedium(16)) }
+        }
     }
 
     /** Reads the file off the main thread into the direct buffer Filament needs. Throws when the file is not a glb/gltf (e.g. an HTML error page). */
@@ -91,8 +140,7 @@ internal object ModelUi {
         val isGlb = bytes.size > 12 && bytes[0] == 'g'.code.toByte() && bytes[1] == 'l'.code.toByte() && bytes[2] == 'T'.code.toByte() && bytes[3] == 'F'.code.toByte()
         val isGltfJson = file.name.endsWith(".gltf", ignoreCase = true) && bytes.isNotEmpty() && bytes[0] == '{'.code.toByte()
         if (!isGlb && !isGltfJson) {
-            file.delete() // do not keep a bad download in the cache
-            throw IOException("The downloaded file is not a glb model")
+            throw BadModelFile()
         }
         ByteBuffer.allocateDirect(bytes.size).apply { put(bytes); rewind() }
     }
@@ -102,17 +150,20 @@ internal object ModelUi {
      * parse is reported as [Loaded.Failed] instead of crashing.
      */
     @Composable
-    private fun rememberModelInstance(loader: ModelLoader, file: File): Loaded =
-        produceState<Loaded>(Loaded.Loading, loader, file) {
+    private fun rememberModelInstance(loader: ModelLoader, file: File): Loaded {
+        val cache = ModelCache.get(LocalContext.current)
+        return produceState<Loaded>(Loaded.Loading, loader, file) {
             value = try {
                 val buffer = readModelBuffer(file)
                 Loaded.Ready(loader.createModelInstance(buffer))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) { // Filament throws NPE / IllegalStateException for broken assets
+                if (e is BadModelFile) cache.invalidate(file) // do not keep a bad download
                 Loaded.Failed(e.message ?: "unknown error")
             }
         }.value
+    }
 
     @Composable
     private fun ErrorText(text: String, modifier: Modifier = Modifier) =
@@ -122,8 +173,8 @@ internal object ModelUi {
     fun Viewer(modelUrl: String, modifier: Modifier) {
         Box(modifier.background(TG.colors.card), contentAlignment = Alignment.Center) {
             when (val fetch = rememberModelFile(modelUrl)) {
-                Fetch.Loading -> CircularProgressIndicator(color = TG.colors.accent)
-                Fetch.Failed -> ErrorText("Could not download the 3D model. Check your connection, or use Open in 3D viewer.")
+                is Fetch.Loading -> LoadingModel(fetch.progress)
+                is Fetch.Failed -> DownloadFailed(fetch)
                 is Fetch.Ready -> {
                     val engine = rememberEngine()
                     val modelLoader = rememberModelLoader(engine)
@@ -133,7 +184,7 @@ internal object ModelUi {
                     val cameraNode = rememberCameraNode(engine) { position = home }
                     val manipulator = rememberCameraManipulator(orbitHomePosition = home, targetPosition = Float3(0f, 0f, 0f))
                     when (val loaded = rememberModelInstance(modelLoader, fetch.file)) {
-                        Loaded.Loading -> CircularProgressIndicator(color = TG.colors.accent)
+                        Loaded.Loading -> LoadingModel(null)
                         is Loaded.Failed -> ErrorText("This 3D model could not be displayed (${loaded.reason}). Try Open in 3D viewer.")
                         is Loaded.Ready -> {
                             val nodes = rememberNodes {
@@ -179,8 +230,8 @@ internal object ModelUi {
                 !availability.isSupported -> ErrorText("AR is not supported on this device.", Modifier.align(Alignment.Center))
                 !granted -> ErrorText("Camera permission is needed to place the aircraft.", Modifier.align(Alignment.Center))
                 else -> when (val fetch = rememberModelFile(modelUrl)) {
-                    Fetch.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center), color = TG.colors.accent)
-                    Fetch.Failed -> ErrorText("Could not load the 3D model.", Modifier.align(Alignment.Center))
+                    is Fetch.Loading -> LoadingModel(fetch.progress, Modifier.align(Alignment.Center))
+                    is Fetch.Failed -> DownloadFailed(fetch, Modifier.align(Alignment.Center))
                     is Fetch.Ready -> ArContent(fetch.file)
                 }
             }

@@ -53,6 +53,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +82,7 @@ import app.topgun.android.designsystem.TGText
 import app.topgun.android.designsystem.components.DetailCircleButton
 import app.topgun.android.designsystem.components.PageCounterPill
 import app.topgun.android.designsystem.components.EmptyState
+import app.topgun.android.designsystem.components.ModelOfflineCard
 import app.topgun.android.designsystem.components.TGLoadingImage
 import app.topgun.android.platform.ui.LocalPlatformUi
 import app.topgun.core.model.AircraftDetail
@@ -411,7 +413,8 @@ private fun isGltf(url: String?): Boolean {
 /**
  * iOS `Model3DView`. The backend ships `.usdz` (Apple only) in `file_3D` and a converted `.glb` in `file_3D_glb`;
  * the Android viewer and AR use the glb (or a gltf) and fall back to the "not available" card when there is none.
- * Models are cached on first load by the Android viewer (cacheDir/models; Settings > Clear Cache removes them).
+ * The viewer shows the real download progress and keeps the file (filesDir/models); [ModelOfflineCard] lets the person
+ * download it ahead of time for offline use and remove it again. Settings > Clear Cache removes all models.
  * "Open in 3D viewer" hands the same file to Google's Scene Viewer if the in-app viewer cannot show it.
  */
 @Composable
@@ -439,14 +442,28 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
             ) {
                 Icon(Icons.Filled.ViewInAr, contentDescription = null, tint = TG.colors.textSecondary, modifier = Modifier.size(TGSize.tapMin))
                 Text("3D model not available on Android yet", style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
-                Text("This aircraft's model is in a format only Apple devices can open. We are working on it.", style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
+                Text("Only the Apple (usdz) version of this model exists so far; there is no .glb file for Android to download. We are working on it.", style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
             }
         }
-        Column(Modifier.fillMaxWidth().padding(top = TGSpace.xl), verticalArrangement = Arrangement.spacedBy(TGSpace.m)) {
+        // Only this part scrolls: the 3D viewer above must keep its vertical drag for orbiting, the buttons below stay pinned.
+        Column(
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = TGSpace.xl),
+            verticalArrangement = Arrangement.spacedBy(TGSpace.m),
+        ) {
             Text(d.name, style = TGText.sailecBold(28), color = TG.colors.textPrimary, maxLines = 2)
             d.role?.takeIf { it.isNotBlank() }?.let { Text(it, style = TGText.sailecMedium(16), color = TGBrand.placeholder) }
+            if (url != null) {
+                val downloads = platform.modelDownloads
+                val downloadState by remember(url) { downloads.state(url) }.collectAsStateWithLifecycle()
+                ModelOfflineCard(
+                    state = downloadState,
+                    onDownload = { downloads.download(url) },
+                    onCancel = { downloads.cancel(url) },
+                    onRemove = { downloads.remove(url) },
+                    modifier = Modifier.padding(top = TGSpace.s),
+                )
+            }
         }
-        Spacer(Modifier.weight(1f))
         if (url != null) {
             OutlinedButton(
                 onClick = { platform.openUrl(sceneViewerUrl(url, d.name)) },
