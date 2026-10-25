@@ -1,5 +1,8 @@
 package app.topgun.android.features.countries
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
+import app.topgun.android.features.home.optionLabel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -86,12 +89,12 @@ fun CountryDetailScreen(id: Int, onBack: () -> Unit, onOpenAircraft: (Int) -> Un
     val platform = LocalAppContainer.current.platform
     Box(Modifier.fillMaxSize().background(TG.colors.background)) {
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading country...", Modifier.align(Alignment.Center))
+            Load.Loading -> LoadingState(stringResource(R.string.countries_loading_country), Modifier.align(Alignment.Center))
             is Load.Failed -> ErrorState(s.error.userMessage, Modifier.align(Alignment.Center), onRetry = vm::load)
             is Load.Loaded -> CountryDetailContent(s.value, onOpenAircraft, onOpenManufacturer, platform::openUrl)
         }
         GeoOverlayButton(
-            Icons.AutoMirrored.Filled.ArrowBack, "Back", onBack,
+            Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.countries_back), onBack,
             Modifier.statusBarsPadding().padding(start = TGSpace.s, top = TGSpace.xs),
         )
     }
@@ -130,17 +133,17 @@ fun CountryDetailContent(
             Modifier.padding(horizontal = TGGeo.detailHorizontal, vertical = TGSpace.l),
             verticalArrangement = Arrangement.spacedBy(TGSpace.l - TGSpace.xs / 4),
         ) {
-            Text("HIGHLIGHTS", style = TGText.sailecMedium(12), color = c.textSecondary)
-            HighlightRow("Air Force Founded:", country.airForceFounded?.takeIf { it.isNotEmpty() } ?: "--", TGBrand.red)
-            HighlightRow("Number of Aircraft:", country.aircraftCount.toString(), TGBrand.blue)
+            Text(stringResource(R.string.countries_highlights), style = TGText.sailecMedium(12), color = c.textSecondary)
+            HighlightRow(stringResource(R.string.countries_air_force_founded), country.airForceFounded?.takeIf { it.isNotEmpty() } ?: "--", TGBrand.red)
+            HighlightRow(stringResource(R.string.countries_aircraft_count), country.aircraftCount.toString(), TGBrand.blue)
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TGSpace.s)) {
                 Icon(Icons.Filled.AirplanemodeActive, contentDescription = null, tint = TGBrand.green)
-                Text("Air Force Wikipedia:", style = TGText.sailecRegular(16), color = c.textPrimary)
+                Text(stringResource(R.string.countries_air_force_wikipedia), style = TGText.sailecRegular(16), color = c.textPrimary)
             }
             country.airForceLink?.takeIf { it.isNotBlank() }?.let { link ->
                 Row(horizontalArrangement = Arrangement.spacedBy(TGSpace.s)) {
-                    GeoLinkButton(country.name.ifEmpty { "Link" }, Icons.Filled.Public, TGBrand.green, { onOpenUrl(link) }, Modifier.weight(1f, fill = false))
-                    GeoLinkButton("Air Force", Icons.Filled.Flight, TGGeoColor.purple, { onOpenUrl(link) })
+                    GeoLinkButton(country.name.ifEmpty { stringResource(R.string.countries_link) }, Icons.Filled.Public, TGBrand.green, { onOpenUrl(link) }, Modifier.weight(1f, fill = false))
+                    GeoLinkButton(stringResource(R.string.countries_air_force), Icons.Filled.Flight, TGGeoColor.purple, { onOpenUrl(link) })
                 }
             }
         }
@@ -150,12 +153,12 @@ fun CountryDetailContent(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Equipment:", style = TGText.sailecBold(20), color = c.textPrimary)
+            Text(stringResource(R.string.countries_equipment), style = TGText.sailecBold(20), color = c.textPrimary)
             CategoryFilter(category, equipmentCategories) { category = it }
         }
         if (planes.isEmpty()) {
             Text(
-                "No aircraft", style = TGText.body, color = c.textSecondary,
+                stringResource(R.string.countries_no_aircraft), style = TGText.body, color = c.textSecondary,
                 modifier = Modifier.padding(horizontal = TGSpace.l, vertical = TGSpace.xl),
             )
         } else {
@@ -176,7 +179,7 @@ fun CountryDetailContent(
 
         if (country.manufacturers.isNotEmpty()) {
             Text(
-                "Manufacturers:", style = TGText.sailecBold(20), color = c.textPrimary,
+                stringResource(R.string.countries_manufacturers), style = TGText.sailecBold(20), color = c.textPrimary,
                 modifier = Modifier.padding(horizontal = TGSpace.l, vertical = TGSpace.s),
             )
             LazyRow(
@@ -210,7 +213,7 @@ private fun CountryCover(country: Country) {
                 .border(TGGeo.coverLogoBorder, Color.White, CircleShape),
         ) {
             val path = images.getOrNull(index % maxOf(images.size, 1))
-            GeoFlag(path, country.code, "${country.name} flag", Modifier.size(TGGeo.coverLogo), ContentScale.Crop)
+            GeoFlag(path, country.code, stringResource(R.string.countries_flag, country.name), Modifier.size(TGGeo.coverLogo), ContentScale.Crop)
         }
     }
 }
@@ -239,14 +242,14 @@ fun CategoryFilter(selected: String, options: List<String>, onSelect: (String) -
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TGSpace.xs),
         ) {
-            Text("Filter", style = TGText.sailecMedium(14), color = TGBrand.blue)
-            Icon(Icons.Filled.FilterList, contentDescription = "Filter by category", tint = TGBrand.blue)
+            Text(stringResource(R.string.countries_filter), style = TGText.sailecMedium(14), color = TGBrand.blue)
+            Icon(Icons.Filled.FilterList, contentDescription = stringResource(R.string.countries_filter_by_category), tint = TGBrand.blue)
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             options.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text(option, style = TGText.sailecRegular(16)) },
-                    trailingIcon = { if (option == selected) Icon(Icons.Filled.Check, contentDescription = "Selected") },
+                    text = { Text(optionLabel(option), style = TGText.sailecRegular(16)) },
+                    trailingIcon = { if (option == selected) Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.selected)) },
                     onClick = { onSelect(option); open = false },
                 )
             }
@@ -279,7 +282,7 @@ fun ManufacturerWideCard(manufacturer: ManufacturerSimple, onClick: () -> Unit) 
                 Box(
                     Modifier.clip(CircleShape).background(Color.White.copy(alpha = TGGeo.tint)).padding(TGSpace.s),
                 ) {
-                    TGImage(manufacturer.logo, "${manufacturer.name} logo", Modifier.size(TGGeo.wideCardLogo), ContentScale.Fit)
+                    TGImage(manufacturer.logo, stringResource(R.string.countries_logo, manufacturer.name), Modifier.size(TGGeo.wideCardLogo), ContentScale.Fit)
                 }
             }
             Text(

@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -36,7 +38,7 @@ fun AccountTopBar(title: String, onBack: () -> Unit, modifier: Modifier = Modifi
             Modifier.size(TGSize.tapMin).clip(CircleShape).clickable(role = Role.Button, onClick = onBack),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = TG.colors.accent)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.ds_back), tint = TG.colors.accent)
         }
         Text(title, style = TGText.sailecBold(18), color = TG.colors.textPrimary, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }

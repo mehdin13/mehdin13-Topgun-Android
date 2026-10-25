@@ -1,5 +1,6 @@
 package app.topgun.android.features.intro
 
+import app.topgun.android.R
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -72,6 +74,7 @@ private fun WelcomeStoryContent(
     pager: androidx.compose.foundation.pager.PagerState,
     onContinue: () -> Unit,
 ) {
+    val storyDescription = stringResource(R.string.welcome_story_progress, selection + 1, slides.size)
     Box(Modifier.fillMaxSize().systemBarsPadding()) {
         HorizontalPager(pager, Modifier.fillMaxSize()) { page ->
             val slide = slides[page]
@@ -80,16 +83,16 @@ private fun WelcomeStoryContent(
                 verticalArrangement = Arrangement.spacedBy(TGSpace.s, Alignment.CenterVertically),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(slide.title, style = TGEntry.welcomeTitleStyle, color = TG.colors.textPrimary, maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
+                Text(stringResource(slide.title), style = TGEntry.welcomeTitleStyle, color = TG.colors.textPrimary, maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.semantics { heading() })
                 Text(
-                    slide.subtitle,
+                    stringResource(slide.subtitle),
                     style = TGEntry.welcomeSubtitleStyle,
                     color = TG.colors.textSecondary,
                     maxLines = 3,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.width(TGEntry.welcomeSubtitleWidth).padding(bottom = TGEntry.welcomeSubtitleBottom),
                 )
-                Image(painterResource(slide.image), contentDescription = slide.title, contentScale = ContentScale.Fit, modifier = Modifier.height(TGEntry.welcomeImageHeight))
+                Image(painterResource(slide.image), contentDescription = stringResource(slide.title), contentScale = ContentScale.Fit, modifier = Modifier.height(TGEntry.welcomeImageHeight))
             }
         }
         // Progress bars on top (iOS `buildPagerFrame`).
@@ -98,7 +101,7 @@ private fun WelcomeStoryContent(
                 .align(Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(TGSpace.l)
-                .clearAndSetSemantics { contentDescription = "Story ${selection + 1} of ${slides.size}" },
+                .clearAndSetSemantics { contentDescription = storyDescription },
             horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
         ) {
             slides.indices.forEach { index ->
@@ -114,7 +117,7 @@ private fun WelcomeStoryContent(
             }
         }
         EntryPillButton(
-            "Continue",
+            stringResource(R.string.intro_continue),
             onContinue,
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(TGSpace.l),
         )

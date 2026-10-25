@@ -1,6 +1,7 @@
 // ANDROID-ONLY
 package app.topgun.android.platform.ui
 
+import androidx.compose.ui.res.stringResource
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -100,7 +101,7 @@ internal object MapUi {
         val context = LocalContext.current
         val keyMissing = remember { mapsKeyMissing(context) }
         if (keyMissing) {
-            MapNoticeBox(MESSAGE_KEY_MISSING, modifier)
+            MapNoticeBox(stringResource(R.string.map_key_missing), modifier)
             return
         }
         val valid = remember(pins) { pins.filter { it.hasValidCoordinates() }.distinctBy { it.id } }
@@ -146,7 +147,7 @@ internal object MapUi {
             }
             if (!loaded) {
                 if (timedOut) {
-                    MapNoticeBox(MESSAGE_LOAD_FAILED, Modifier.fillMaxSize())
+                    MapNoticeBox(stringResource(R.string.map_load_failed), Modifier.fillMaxSize())
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = TG.colors.accent)
@@ -283,13 +284,13 @@ internal object MapUi {
                                 .clip(CircleShape)
                                 .background(TGBrand.blue)
                                 .border(TGGeo.coverLogoBorder, Color.White, CircleShape)
-                                .clickable(role = Role.Button, onClickLabel = "Show ${pin.title}") { onPinClick(pin) },
+                                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.map_show_pin, pin.title)) { onPinClick(pin) },
                             contentAlignment = Alignment.Center,
                         ) {
                             if (pin.flagUrl.isNullOrBlank()) {
                                 Text(pin.title.take(2).uppercase(), style = TGText.sailecBold(10), color = Color.White)
                             } else {
-                                TGImage(pin.flagUrl, "${pin.title} flag", Modifier.fillMaxSize(), ContentScale.Crop)
+                                TGImage(pin.flagUrl, stringResource(R.string.ds_flag_cd, pin.title), Modifier.fillMaxSize(), ContentScale.Crop)
                             }
                         }
                     }
@@ -397,11 +398,6 @@ internal object MapUi {
     private const val SINGLE_PIN_ZOOM = 4f
     private const val MAPS_KEY_META = "com.google.android.geo.API_KEY"
     private const val MAP_LOAD_TIMEOUT_MS = 12_000L
-    private const val MESSAGE_KEY_MISSING =
-        "Google Maps key missing. Set topgun.mapsApiKey (local.properties or the MAPS_API_KEY secret) and rebuild."
-    private const val MESSAGE_LOAD_FAILED =
-        "The map could not be loaded. Check the Maps API key restrictions (package app.topgun.android + signing SHA-1) " +
-            "and that Maps SDK for Android is enabled."
 
     // Globe tuning: iOS rotates a full turn in 120 s. Android adds pinch zoom (1x-5x) and a +-80 degree tilt.
     private const val GRID_IDLE = 256

@@ -1,6 +1,7 @@
 // ANDROID-ONLY
 package app.topgun.android.platform
 
+import app.topgun.android.R
 import android.content.Context
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -32,7 +33,7 @@ import java.util.concurrent.TimeUnit
  * and remove it again. Settings > Clear Cache calls [clear]. The folder is in `filesDir` (not `cacheDir`) so that
  * the system does not reclaim a model the person downloaded on purpose.
  */
-class ModelCache private constructor(context: Context) : ModelDownloads {
+class ModelCache private constructor(private val context: Context) : ModelDownloads {
     private val dir: File = File(context.filesDir, "models")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val client = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
@@ -137,7 +138,7 @@ class ModelCache private constructor(context: Context) : ModelDownloads {
                     call.execute().use { response ->
                         val body = response.body
                         if (!response.isSuccessful || body == null) {
-                            f.value = ModelDownloadState.Failed("The server answered ${response.code}.")
+                            f.value = ModelDownloadState.Failed(context.getString(R.string.model_err_server, response.code))
                             return
                         }
                         val total = body.contentLength().takeIf { it > 0 }
@@ -163,7 +164,7 @@ class ModelCache private constructor(context: Context) : ModelDownloads {
                         }
                         if (total != null && read != total) {
                             part.delete()
-                            f.value = ModelDownloadState.Failed("The download was interrupted.")
+                            f.value = ModelDownloadState.Failed(context.getString(R.string.model_err_interrupted))
                             return
                         }
                     }
@@ -171,11 +172,11 @@ class ModelCache private constructor(context: Context) : ModelDownloads {
                     onCancel?.dispose()
                 }
                 target.delete()
-                f.value = if (part.renameTo(target)) ModelDownloadState.Downloaded(target.length()) else ModelDownloadState.Failed("Could not save the file.")
+                f.value = if (part.renameTo(target)) ModelDownloadState.Downloaded(target.length()) else ModelDownloadState.Failed(context.getString(R.string.model_err_save))
             } catch (e: IOException) {
                 currentCoroutineContext().ensureActive() // an IOException caused by cancelling is a cancellation, not a failure
                 part.delete()
-                f.value = ModelDownloadState.Failed(e.message ?: "Check your connection and try again.")
+                f.value = ModelDownloadState.Failed(e.message ?: context.getString(R.string.model_err_connection))
             }
         } catch (e: CancellationException) {
             part.delete()

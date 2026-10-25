@@ -28,8 +28,8 @@ for d in sorted(os.listdir(res)):
         name = f.split('.')[0]
         if kind == 'values':
             if f.startswith('strings') and f.endswith('.xml'):
-                for m in re.finditer(r'<(?:string|plurals|string-array) name="([^"]+)"', open(os.path.join(p, f)).read()):
-                    kinds.setdefault('string', set()).add(m.group(1))
+                for m in re.finditer(r'<(string|plurals|string-array) name="([^"]+)"', open(os.path.join(p, f)).read()):
+                    kinds.setdefault('plurals' if m.group(1) == 'plurals' else 'string', set()).add(m.group(2))
             continue
         kinds.setdefault(kind, set()).add(name)
 with open(out, 'w') as o:

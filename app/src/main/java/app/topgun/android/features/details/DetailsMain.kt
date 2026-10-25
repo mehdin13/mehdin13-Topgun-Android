@@ -1,5 +1,8 @@
 package app.topgun.android.features.details
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -113,6 +116,7 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
     val platform = LocalAppContainer.current.platform
     var showRatingAlert by rememberSaveable { mutableStateOf(false) }
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val shareMessage = stringResource(R.string.details_share_text, d.name)
 
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         DetailHeader(
@@ -120,7 +124,7 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
             name = d.name,
             isFavorite = ui.isFavorite,
             onBack = a.onBack,
-            onShare = { platform.share(shareText(d.name)) },
+            onShare = { platform.share(shareMessage) },
             onFavorite = a.onFavorite,
         )
         Column(
@@ -135,7 +139,7 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
             if (!d.trivia.isNullOrBlank()) {
                 DetailDivider()
                 Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-                    DetailHeading("Trivia", R.drawable.update, Modifier.fillMaxWidth())
+                    DetailHeading(stringResource(R.string.details_trivia), R.drawable.update, Modifier.fillMaxWidth())
                     Text(d.trivia.orEmpty(), style = TGText.sailecRegular(17), color = TG.colors.textPrimary, modifier = Modifier.padding(horizontal = TGDetailSpace.five))
                 }
             }
@@ -143,7 +147,7 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
             GeneralDetails(d)
             if (d.imageGallery.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-                    DetailHeading("Gallery", R.drawable.card, Modifier.fillMaxWidth())
+                    DetailHeading(stringResource(R.string.details_gallery), R.drawable.card, Modifier.fillMaxWidth())
                     CardDeck(d.imageGallery.filter { it.isPortrait }, onOpen = { a.open(DetailPage.DeckViewer, it) })
                     DetailDivider()
                 }
@@ -156,22 +160,22 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
             }
             if (d.manufacturers.isNotEmpty()) {
                 Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-                    DetailHeading("Manufacturer", R.drawable.direction, Modifier.fillMaxWidth())
+                    DetailHeading(stringResource(R.string.details_manufacturer), R.drawable.direction, Modifier.fillMaxWidth())
                     d.manufacturers.forEach { ManufacturerRow(it) { a.onOpenManufacturer(it.id) } }
                 }
                 DetailDivider()
             }
             if (d.variants.isNotEmpty()) {
-                AircraftRail("Variants", d, d.variants, user, a)
+                AircraftRail(stringResource(R.string.details_variants), d, d.variants, user, a)
                 DetailDivider()
             }
             if (d.similar.isNotEmpty()) {
-                AircraftRail("Similar Aircraft", d, d.similar, user, a)
+                AircraftRail(stringResource(R.string.details_similar), d, d.similar, user, a)
                 DetailDivider()
             }
             d.wikipediaLink?.takeIf { it.isNotBlank() }?.let { link ->
                 Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l), modifier = Modifier.padding(vertical = TGSpace.l)) {
-                    DetailHeading("Learn more", R.drawable.direction, Modifier.fillMaxWidth())
+                    DetailHeading(stringResource(R.string.details_learn_more), R.drawable.direction, Modifier.fillMaxWidth())
                     Row(
                         Modifier.fillMaxWidth().defaultMinSize(minHeight = TGSize.tapMin).clip(TGRadius.card).background(TG.colors.card)
                             .clickable(role = Role.Button) { platform.openUrl(link) }.padding(TGSpace.m),
@@ -179,8 +183,8 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
                         horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
                     ) {
                         Icon(Icons.Outlined.Language, contentDescription = null, tint = TG.colors.accent)
-                        Text("Wikipedia", style = TGText.sailecMedium(16), color = TG.colors.accent, modifier = Modifier.weight(1f))
-                        Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = "Opens in your browser", tint = TG.colors.accent)
+                        Text(stringResource(R.string.details_wikipedia), style = TGText.sailecMedium(16), color = TG.colors.accent, modifier = Modifier.weight(1f))
+                        Icon(Icons.AutoMirrored.Outlined.OpenInNew, contentDescription = stringResource(R.string.details_opens_in_browser), tint = TG.colors.accent)
                     }
                 }
             }
@@ -191,7 +195,7 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
                     .clickable(role = Role.Button) { a.open(DetailPage.Comments, 0) },
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Show Comments", style = TGText.sailecMedium(16), color = TGDetailColors.photoBlack)
+                Text(stringResource(R.string.details_show_comments), style = TGText.sailecMedium(16), color = TGDetailColors.photoBlack)
             }
         }
         Spacer(Modifier.height(TGDetailSpace.bottomClear))
@@ -200,15 +204,13 @@ internal fun DetailMain(d: AircraftDetail, ui: DetailsState, user: UserState, a:
     if (showRatingAlert) {
         AlertDialog(
             onDismissRequest = { showRatingAlert = false },
-            title = { Text("Sign In Required", style = TGText.sailecBold(18)) },
-            text = { Text("Please sign in to rate this aircraft", style = TGText.sailecRegular(14)) },
-            confirmButton = { TextButton({ showRatingAlert = false; a.onShowSignIn() }) { Text("Sign in") } },
-            dismissButton = { TextButton({ showRatingAlert = false }) { Text("OK") } },
+            title = { Text(stringResource(R.string.ds_sign_in_required), style = TGText.sailecBold(18)) },
+            text = { Text(stringResource(R.string.details_sign_in_to_rate), style = TGText.sailecRegular(14)) },
+            confirmButton = { TextButton({ showRatingAlert = false; a.onShowSignIn() }) { Text(stringResource(R.string.ds_sign_in)) } },
+            dismissButton = { TextButton({ showRatingAlert = false }) { Text(stringResource(R.string.ds_ok)) } },
         )
     }
 }
-
-private fun shareText(name: String) = "Check out the $name! Learn more in Topgun, your go-to aircraft encyclopedia. 🚀✈️"
 
 @Composable
 private fun DetailDivider() {
@@ -222,21 +224,21 @@ private fun DetailDivider() {
 private fun DetailHeader(imagePath: String?, name: String, isFavorite: Boolean, onBack: () -> Unit, onShare: () -> Unit, onFavorite: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(TGDetailSize.headerHeight)) {
         if (imagePath.isNullOrBlank()) {
-            Image(painterResource(R.drawable.img_0_placeholder), contentDescription = "$name photo", contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            Image(painterResource(R.drawable.img_0_placeholder), contentDescription = stringResource(R.string.ds_photo_cd, name), contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
-            TGImage(imagePath, contentDescription = "$name photo", modifier = Modifier.fillMaxSize())
+            TGImage(imagePath, contentDescription = stringResource(R.string.ds_photo_cd, name), modifier = Modifier.fillMaxSize())
         }
         Row(
             Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = TGDetailSpace.headerButtonSide - TGSpace.s).padding(top = TGDetailSpace.headerButtonTop),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TGSpace.xs),
         ) {
-            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onBack)
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onBack)
             Spacer(Modifier.weight(1f))
-            DetailCircleButton(Icons.Filled.Share, "Share $name", onShare)
+            DetailCircleButton(Icons.Filled.Share, stringResource(R.string.details_share_cd, name), onShare)
             DetailCircleButton(
                 if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                if (isFavorite) "Remove $name from favorites" else "Add $name to favorites",
+                if (isFavorite) stringResource(R.string.ds_remove_from_favorites_cd, name) else stringResource(R.string.details_add_favorite_cd, name),
                 onFavorite,
                 glyph = if (isFavorite) TGBrand.red else TGDetailColors.photoBlack,
             )
@@ -247,6 +249,7 @@ private fun DetailHeader(imagePath: String?, name: String, isFavorite: Boolean, 
 /** iOS `AircraftTitleView`, plus the like button. */
 @Composable
 private fun TitleBlock(d: AircraftDetail, ui: DetailsState, onLike: () -> Unit) {
+    val likeDescription = stringResource(if (ui.isLiked) R.string.details_unlike_cd else R.string.details_like_cd, ui.likesCount)
     Column(Modifier.padding(vertical = TGSpace.s), verticalArrangement = Arrangement.spacedBy(TGDetailSpace.ten)) {
         Text(
             d.name, style = TGText.sailecBold(22), color = TG.colors.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis,
@@ -264,7 +267,7 @@ private fun TitleBlock(d: AircraftDetail, ui: DetailsState, onLike: () -> Unit) 
         Row(
             Modifier.padding(horizontal = TGDetailSpace.five).defaultMinSize(minHeight = TGSize.tapMin).clip(TGDetailSize.pill)
                 .clickable(role = Role.Button, onClick = onLike)
-                .semantics { contentDescription = (if (ui.isLiked) "Unlike" else "Like") + ", ${ui.likesCount} likes" },
+                .semantics { contentDescription = likeDescription },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
         ) {
@@ -281,12 +284,12 @@ private fun TitleBlock(d: AircraftDetail, ui: DetailsState, onLike: () -> Unit) 
 private fun QuickActions(d: AircraftDetail, a: DetailActions) {
     class Tile(val icon: androidx.compose.ui.graphics.vector.ImageVector, val text: String, val subtitle: String, val active: Boolean, val gradient: List<androidx.compose.ui.graphics.Color>, val page: DetailPage)
     val tiles = buildList {
-        if (d.imageGallery.isNotEmpty()) add(Tile(Icons.Filled.PhotoLibrary, "Gallery", "", true, TGDetailColors.tileBlue, DetailPage.Gallery))
-        add(Tile(Icons.Filled.AutoAwesome, "Specification", "More Details", true, TGDetailColors.tileOrange, DetailPage.Specs))
-        if (d.videoGallery.isNotEmpty()) add(Tile(Icons.Filled.VideoLibrary, "Video Gallery", "${d.videoGallery.size} videos", false, TGDetailColors.tileOrange, DetailPage.Videos))
-        if (d.countriesOfOperation.isNotEmpty()) add(Tile(Icons.Filled.Shield, "Operators", "Country operation", true, TGDetailColors.tilePink, DetailPage.Operators))
-        if (!d.filePdf.isNullOrBlank()) add(Tile(Icons.Filled.PictureAsPdf, "Pdf", "", true, TGDetailColors.tileCherry, DetailPage.Pdf))
-        if (!d.file3d.isNullOrBlank() || !d.fileGlb.isNullOrBlank()) add(Tile(Icons.Filled.ViewInAr, "3D Model", "", true, TGDetailColors.tileGreen, DetailPage.Model))
+        if (d.imageGallery.isNotEmpty()) add(Tile(Icons.Filled.PhotoLibrary, stringResource(R.string.details_gallery), "", true, TGDetailColors.tileBlue, DetailPage.Gallery))
+        add(Tile(Icons.Filled.AutoAwesome, stringResource(R.string.details_specification), stringResource(R.string.details_more_details), true, TGDetailColors.tileOrange, DetailPage.Specs))
+        if (d.videoGallery.isNotEmpty()) add(Tile(Icons.Filled.VideoLibrary, stringResource(R.string.details_video_gallery), pluralStringResource(R.plurals.details_videos_count, d.videoGallery.size, d.videoGallery.size), false, TGDetailColors.tileOrange, DetailPage.Videos))
+        if (d.countriesOfOperation.isNotEmpty()) add(Tile(Icons.Filled.Shield, stringResource(R.string.details_operators), stringResource(R.string.details_country_operation), true, TGDetailColors.tilePink, DetailPage.Operators))
+        if (!d.filePdf.isNullOrBlank()) add(Tile(Icons.Filled.PictureAsPdf, stringResource(R.string.details_pdf), "", true, TGDetailColors.tileCherry, DetailPage.Pdf))
+        if (!d.file3d.isNullOrBlank() || !d.fileGlb.isNullOrBlank()) add(Tile(Icons.Filled.ViewInAr, stringResource(R.string.details_3d_model), "", true, TGDetailColors.tileGreen, DetailPage.Model))
     }
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
         tiles.chunked(2).forEach { row ->
@@ -309,7 +312,7 @@ private fun QuickActions(d: AircraftDetail, a: DetailActions) {
 @Composable
 private fun Overview(description: String?, expanded: Boolean, onToggle: () -> Unit) {
     Column(Modifier.padding(vertical = TGSpace.l), verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-        DetailHeading("Overview", R.drawable.update, Modifier.fillMaxWidth())
+        DetailHeading(stringResource(R.string.details_overview), R.drawable.update, Modifier.fillMaxWidth())
         val full = description.orEmpty()
         if (full.isNotEmpty()) {
             val threshold = 800
@@ -320,7 +323,7 @@ private fun Overview(description: String?, expanded: Boolean, onToggle: () -> Un
                 Text(if (expanded) full else preview, style = TGText.sailecRegular(17), color = TG.colors.textPrimary, modifier = Modifier.padding(horizontal = TGDetailSpace.five))
                 if (shouldTruncate) {
                     Text(
-                        if (expanded) "Show Less" else "Show More",
+                        stringResource(if (expanded) R.string.details_show_less else R.string.details_show_more),
                         style = TGText.sailecBold(16), color = TG.colors.accent,
                         modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin).clickable(role = Role.Button, onClick = onToggle).padding(horizontal = TGDetailSpace.five)
                     )
@@ -333,11 +336,19 @@ private fun Overview(description: String?, expanded: Boolean, onToggle: () -> Un
 @Composable
 private fun GeneralDetails(d: AircraftDetail) {
     Column(Modifier.padding(vertical = TGSpace.l), verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-        DetailHeading("General Details", R.drawable.weapon, Modifier.fillMaxWidth())
+        DetailHeading(stringResource(R.string.details_general_details), R.drawable.weapon, Modifier.fillMaxWidth())
         Column(verticalArrangement = Arrangement.spacedBy(TGDetailSpace.five)) {
-            val na = "N/A"
-            InfoRow("Introduction" to (d.introduction ?: na), "First Flight" to (d.firstFlight ?: na), "Status" to (d.status ?: na))
-            InfoRow("Price" to "$${d.priceMillion ?: na} Million", "Number built" to (d.numberBuilt ?: na), "Crew Size" to "${d.crewSize ?: 1}")
+            val na = stringResource(R.string.ds_not_available)
+            InfoRow(
+                stringResource(R.string.details_introduction) to (d.introduction ?: na),
+                stringResource(R.string.details_first_flight) to (d.firstFlight ?: na),
+                stringResource(R.string.details_status) to (d.status ?: na),
+            )
+            InfoRow(
+                stringResource(R.string.details_price) to stringResource(R.string.details_price_million, d.priceMillion?.toString() ?: na),
+                stringResource(R.string.details_number_built) to (d.numberBuilt ?: na),
+                stringResource(R.string.details_crew_size) to "${d.crewSize ?: 1}",
+            )
         }
     }
 }
@@ -355,7 +366,7 @@ private fun InfoRow(vararg cells: Pair<String, String>) {
 @Composable
 private fun CardDeck(images: List<ImageGalleryItem>, onOpen: (Int) -> Unit) {
     if (images.isEmpty()) {
-        Text("No portrait images available.", style = TGText.sailecRegular(14), color = TGBrand.placeholder)
+        Text(stringResource(R.string.details_no_portrait_images), style = TGText.sailecRegular(14), color = TGBrand.placeholder)
         return
     }
     val pager = rememberPagerState(pageCount = { images.size })
@@ -366,7 +377,7 @@ private fun CardDeck(images: List<ImageGalleryItem>, onOpen: (Int) -> Unit) {
             pageSpacing = TGSpace.m,
         ) { index ->
             TGLoadingImage(
-                images[index].image, contentDescription = "Aircraft photo ${index + 1} of ${images.size}",
+                images[index].image, contentDescription = stringResource(R.string.details_aircraft_photo_cd, index + 1, images.size),
                 modifier = Modifier.fillMaxWidth().aspectRatio(TGDetailSize.deckAspect).clip(TGDetailSize.deckRadius).clickable(role = Role.Button) { onOpen(index) },
             )
         }
@@ -385,7 +396,7 @@ private fun watchUrl(link: String): String {
 @Composable
 private fun VideoSection(link: String?) {
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-        DetailHeading("Video", R.drawable.card, Modifier.fillMaxWidth())
+        DetailHeading(stringResource(R.string.details_video), R.drawable.card, Modifier.fillMaxWidth())
         if (!link.isNullOrBlank()) {
             val platform = LocalAppContainer.current.platform
             LocalPlatformUi.current.YouTubePlayer(link, Modifier.fillMaxWidth().height(TGDetailSize.mediaHeight).clip(TGDetailSize.mediaRadius))
@@ -394,9 +405,9 @@ private fun VideoSection(link: String?) {
                 onClick = { platform.openUrl(watchUrl(link)) },
                 modifier = Modifier.fillMaxWidth().defaultMinSize(minHeight = TGSize.tapMin),
                 shape = TGDetailSize.buttonRadius,
-            ) { Text("Watch on YouTube", style = TGText.sailecMedium(16)) }
+            ) { Text(stringResource(R.string.video_watch_on_youtube), style = TGText.sailecMedium(16)) }
         } else {
-            Text("No YouTube video available.", style = TGText.sailecRegular(14), color = TGBrand.placeholder)
+            Text(stringResource(R.string.details_no_video), style = TGText.sailecRegular(14), color = TGBrand.placeholder)
         }
     }
 }
@@ -407,11 +418,13 @@ private fun VideoSection(link: String?) {
 @Composable
 internal fun rememberOperatorPins(countries: List<CountryOfOperation>): List<MapPin> {
     val media = LocalAppContainer.current.media
-    return remember(countries) {
+    val context = LocalContext.current
+    val unknown = stringResource(R.string.ds_unknown)
+    return remember(countries, unknown) {
         countries.mapNotNull { c ->
             val lat = c.latitude ?: return@mapNotNull null
             val lon = c.longitude ?: return@mapNotNull null
-            MapPin(c.id, c.name ?: "Unknown", "Aircraft: ${c.aircraftCount}", lat, lon, media.resolve(c.flagIcon))
+            MapPin(c.id, c.name ?: unknown, context.getString(R.string.details_aircraft_count, c.aircraftCount), lat, lon, media.resolve(c.flagIcon))
         }
     }
 }
@@ -420,13 +433,13 @@ internal fun rememberOperatorPins(countries: List<CountryOfOperation>): List<Map
 private fun Operators(countries: List<CountryOfOperation>, a: DetailActions) {
     val pins = rememberOperatorPins(countries)
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-        DetailHeading("Operators", R.drawable.building, Modifier.fillMaxWidth())
+        DetailHeading(stringResource(R.string.details_operators), R.drawable.building, Modifier.fillMaxWidth())
         FlagGrid(countries)
         if (pins.isNotEmpty()) {
             Box(Modifier.fillMaxWidth().height(TGDetailSize.mediaHeight).clip(TGDetailSize.mediaRadius)) {
                 LocalPlatformUi.current.WorldMap(pins, Modifier.fillMaxSize(), onPinClick = { a.onOpenCountry(it.id) })
                 DetailCircleButton(
-                    Icons.Filled.Info, "Open the full map", { a.open(DetailPage.Operators, 0) },
+                    Icons.Filled.Info, stringResource(R.string.details_open_full_map), { a.open(DetailPage.Operators, 0) },
                     modifier = Modifier.align(Alignment.TopEnd).padding(TGSpace.xs),
                     glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f),
                 )
@@ -484,8 +497,8 @@ private fun FlagTooltip(c: CountryOfOperation) {
                 .semantics { liveRegion = LiveRegionMode.Polite },
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text(c.name ?: "Unknown", style = TGText.sailecBold(12), color = TGDetailColors.onPhoto, maxLines = 1)
-            Text("${c.aircraftCount} aircraft", style = TGText.sailecRegular(12), color = TGDetailColors.onPhoto.copy(alpha = 0.8f), maxLines = 1)
+            Text(c.name ?: stringResource(R.string.ds_unknown), style = TGText.sailecBold(12), color = TGDetailColors.onPhoto, maxLines = 1)
+            Text(stringResource(R.string.details_aircraft_count, c.aircraftCount), style = TGText.sailecRegular(12), color = TGDetailColors.onPhoto.copy(alpha = 0.8f), maxLines = 1)
         }
     }
 }
@@ -493,10 +506,11 @@ private fun FlagTooltip(c: CountryOfOperation) {
 /** iOS `CountryFlagIcon`: the flag, or the default aircraft flag icon. */
 @Composable
 private fun FlagCell(c: CountryOfOperation, onClick: () -> Unit) {
-    val name = c.name ?: "Unknown"
+    val name = c.name ?: stringResource(R.string.ds_unknown)
+    val flagDescription = stringResource(R.string.details_flag_cd, name, c.aircraftCount)
     Box(
         Modifier.defaultMinSize(TGSize.tapMin, TGSize.tapMin).size(TGDetailSize.flag).clip(TGDetailSize.cellRadius)
-            .clickable(role = Role.Button, onClickLabel = "Show country name", onClick = onClick).semantics { contentDescription = "$name, ${c.aircraftCount} aircraft" },
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.details_show_country_name), onClick = onClick).semantics { contentDescription = flagDescription },
         contentAlignment = Alignment.Center,
     ) {
         val svg = TGAsset.flagSvg(c.code)
@@ -522,7 +536,7 @@ private fun ManufacturerRow(m: ManufacturerBrief, onClick: () -> Unit) {
             if (m.logo.isNullOrBlank()) {
                 Image(painterResource(R.drawable.fan1), contentDescription = null, modifier = Modifier.fillMaxSize())
             } else {
-                TGImage(m.logo, contentDescription = "${m.name} logo", contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                TGImage(m.logo, contentDescription = stringResource(R.string.details_logo_cd, m.name), contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
             }
         }
         Text(m.name, style = TGText.sailecBold(17), color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
@@ -547,7 +561,7 @@ private fun AircraftRail(title: String, owner: AircraftDetail, items: List<app.t
 @Composable
 private fun RatingSection(ui: DetailsState, onRate: (Int) -> Unit) {
     Column(Modifier.padding(horizontal = TGDetailSpace.ten), verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
-        Text("Rate this aircraft", style = TGText.sailecBold(18), color = TG.colors.textPrimary)
+        Text(stringResource(R.string.details_rate_this), style = TGText.sailecBold(18), color = TG.colors.textPrimary)
         Column(
             Modifier.fillMaxWidth().background(TGBrand.darkBack.copy(alpha = 0.92f), TGRadius.card).padding(vertical = TGSpace.xl),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -557,7 +571,7 @@ private fun RatingSection(ui: DetailsState, onRate: (Int) -> Unit) {
             if (ui.isRating) {
                 CircularProgressIndicator(color = TGDetailColors.onPhoto, modifier = Modifier.size(TGSpace.xl))
             } else if (ui.userRating > 0) {
-                Text("Rating submitted", style = TGText.sailecRegular(13), color = TGDetailColors.onPhoto.copy(alpha = 0.8f))
+                Text(stringResource(R.string.details_rating_submitted), style = TGText.sailecRegular(13), color = TGDetailColors.onPhoto.copy(alpha = 0.8f))
             }
         }
     }

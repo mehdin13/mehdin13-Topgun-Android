@@ -1,5 +1,6 @@
 package app.topgun.android.designsystem.components
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -59,7 +60,7 @@ fun GeoTopBar(title: String, onBack: () -> Unit, modifier: Modifier = Modifier, 
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
     ) {
-        GeoIconButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onBack, tint = TG.colors.accent)
+        GeoIconButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onBack, tint = TG.colors.accent)
         Text(
             title, style = TGText.sailecBold(18), color = TG.colors.textPrimary,
             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f),
@@ -163,7 +164,7 @@ fun FeaturedCard(
         Box(Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(TGGeo.shape20), contentAlignment = Alignment.Center) {
             GeoCover(coverPath, null, Modifier.matchParentSize())
             Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = TGGeo.scrimLight)))
-            GeoFlag(iconPath, code, "$name flag", Modifier.size(TGGeo.featuredFlagWidth, TGGeo.featuredFlagHeight))
+            GeoFlag(iconPath, code, stringResource(R.string.ds_flag_cd, name), Modifier.size(TGGeo.featuredFlagWidth, TGGeo.featuredFlagHeight))
         }
         Text(
             name, style = TGText.sailecBold(12), color = TG.colors.textPrimary, textAlign = TextAlign.Center,
@@ -194,11 +195,11 @@ fun EquipmentCard(
         Box(Modifier.size(TGGeo.equipmentCardWidth, TGGeo.equipmentImageHeight).clip(TGGeo.shape12)) {
             if (thumbnail.isNullOrBlank()) {
                 Image(
-                    painterResource(R.drawable.img_0_placeholder), contentDescription = "$name photo",
+                    painterResource(R.drawable.img_0_placeholder), contentDescription = stringResource(R.string.ds_photo_cd, name),
                     contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize(),
                 )
             } else {
-                TGImage(thumbnail, "$name photo", Modifier.fillMaxSize())
+                TGImage(thumbnail, stringResource(R.string.ds_photo_cd, name), Modifier.fillMaxSize())
             }
             if (isLocked) LockScrim(Modifier.matchParentSize(), TGGeo.scrim)
         }
@@ -213,7 +214,7 @@ fun EquipmentCard(
 @Composable
 fun LockScrim(modifier: Modifier = Modifier, alpha: Float = TGGeo.scrim) {
     Box(modifier.background(Color.Black.copy(alpha = alpha)), contentAlignment = Alignment.Center) {
-        Icon(Icons.Filled.Lock, contentDescription = "Pro only", tint = Color.White)
+        Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.ds_pro_only), tint = Color.White)
     }
 }
 

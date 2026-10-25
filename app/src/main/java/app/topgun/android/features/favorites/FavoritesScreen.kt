@@ -1,5 +1,7 @@
 package app.topgun.android.features.favorites
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -91,7 +93,7 @@ fun FavoritesScreen(onOpenAircraft: (Int) -> Unit, onShowSignIn: () -> Unit, onS
             Modifier.fillMaxWidth().padding(horizontal = TGSpace.l, vertical = TGSpace.s),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text("Favorite", style = TGText.largeTitle, color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
+            Text(stringResource(R.string.favorites_title), style = TGText.largeTitle, color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
             if (user.isLoggedIn && state is Load.Loaded) {
                 Box(
                     Modifier.size(TGSize.tapMin).clip(CircleShape).clickable(role = Role.Button) { isGrid = !isGrid },
@@ -99,7 +101,7 @@ fun FavoritesScreen(onOpenAircraft: (Int) -> Unit, onShowSignIn: () -> Unit, onS
                 ) {
                     Icon(
                         if (isGrid) Icons.Filled.GridView else Icons.Filled.FormatListBulleted,
-                        contentDescription = if (isGrid) "Switch to list view" else "Switch to grid view",
+                        contentDescription = stringResource(if (isGrid) R.string.favorites_switch_to_list else R.string.favorites_switch_to_grid),
                         tint = TG.colors.accent,
                     )
                 }
@@ -119,14 +121,14 @@ fun FavoritesScreen(onOpenAircraft: (Int) -> Unit, onShowSignIn: () -> Unit, onS
         }
 
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading favorites...", Modifier.weight(1f))
+            Load.Loading -> LoadingState(stringResource(R.string.favorites_loading), Modifier.weight(1f))
             is Load.Failed -> ErrorState(s.error.userMessage, Modifier.weight(1f), onRetry = vm::load)
             is Load.Loaded -> {
                 val items = s.value
                 when {
                     items.isEmpty() -> Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                         // iOS ContentUnavailableView: magnifier + "No results found".
-                        EmptyState("No results found", icon = Icons.Filled.FavoriteBorder)
+                        EmptyState(stringResource(R.string.favorites_no_results), icon = Icons.Filled.FavoriteBorder)
                     }
                     isGrid -> FavoritesGrid(items, user.isPremium, onTap, vm::remove, Modifier.weight(1f))
                     else -> FavoritesList(items, user.isPremium, onTap, vm::remove, Modifier.weight(1f))
@@ -144,9 +146,9 @@ private fun SignedOutState(onShowSignIn: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(Icons.Filled.FavoriteBorder, contentDescription = null, tint = TG.colors.textSecondary, modifier = Modifier.size(TGAccountSize.emptyIcon))
-        Text("Sign in to see your favorite aircraft", style = TGText.sailecMedium(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.favorites_sign_in_prompt), style = TGText.sailecMedium(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
         Button(onClick = onShowSignIn, shape = TGRadius.button, modifier = Modifier.heightIn(min = TGSize.tapMin)) {
-            Text("Sign In", style = TGText.sailecBold(16))
+            Text(stringResource(R.string.favorites_sign_in), style = TGText.sailecBold(16))
         }
     }
 }
@@ -175,10 +177,10 @@ private fun FavoriteCard(aircraft: Aircraft, locked: Boolean, onClick: () -> Uni
             verticalArrangement = Arrangement.spacedBy(TGSpace.s),
         ) {
             Box(Modifier.fillMaxWidth().height(TGAccountSize.favoriteCardImageHeight).clip(TGRadius.image)) {
-                TGImage(aircraft.thumbnail, contentDescription = "${aircraft.name} photo", modifier = Modifier.fillMaxSize())
+                TGImage(aircraft.thumbnail, contentDescription = stringResource(R.string.favorites_photo, aircraft.name), modifier = Modifier.fillMaxSize())
                 if (locked) {
                     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Lock, contentDescription = "Pro only", tint = Color.White)
+                        Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.favorites_pro_only), tint = Color.White)
                     }
                 }
             }

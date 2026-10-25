@@ -1,5 +1,7 @@
 package app.topgun.android.features.manufacturers
 
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -57,12 +59,12 @@ fun ManufacturerListScreen(onBack: () -> Unit, onOpenManufacturer: (Int) -> Unit
     val vm = containerViewModel("manufacturers") { ManufacturerListViewModel(it.api) }
     val state by vm.state.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(TG.colors.background)) {
-        GeoTopBar("Manufacturers", onBack)
+        GeoTopBar(stringResource(R.string.manufacturers_title), onBack)
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading manufacturers...")
-            is Load.Failed -> ErrorState("Failed to load manufacturers", onRetry = vm::load)
+            Load.Loading -> LoadingState(stringResource(R.string.manufacturers_loading))
+            is Load.Failed -> ErrorState(stringResource(R.string.manufacturers_load_failed), onRetry = vm::load)
             is Load.Loaded -> if (s.value.isEmpty()) {
-                EmptyState("No manufacturers available", icon = Icons.Filled.Business, onRetry = vm::load)
+                EmptyState(stringResource(R.string.manufacturers_empty), icon = Icons.Filled.Business, onRetry = vm::load)
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(TGGeo.wideCardWidth),
@@ -73,8 +75,8 @@ fun ManufacturerListScreen(onBack: () -> Unit, onOpenManufacturer: (Int) -> Unit
                 ) {
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column(Modifier.padding(top = TGSpace.l), verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
-                            Text("Top Manufacturers", style = TGText.rounded(28, FontWeight.Bold), color = TG.colors.textPrimary)
-                            Text("Leading global aerospace brands", style = TGText.sailecRegular(14), color = TG.colors.textSecondary)
+                            Text(stringResource(R.string.manufacturers_top_title), style = TGText.rounded(28, FontWeight.Bold), color = TG.colors.textPrimary)
+                            Text(stringResource(R.string.manufacturers_top_subtitle), style = TGText.sailecRegular(14), color = TG.colors.textSecondary)
                         }
                     }
                     items(s.value.distinctBy { it.id }, key = { it.id }) { m -> ManufacturerCard(m) { onOpenManufacturer(m.id) } }
@@ -100,9 +102,9 @@ fun ManufacturerCard(manufacturer: Manufacturer, onClick: () -> Unit) {
                     .clip(TGGeo.shape12).background(Color.White).padding(TGSpace.s),
             ) {
                 if (manufacturer.logo.isNullOrBlank()) {
-                    Image(painterResource(R.drawable.topgun_logo2), "${manufacturer.name} logo", Modifier.size(TGGeo.manufacturerBadge), contentScale = ContentScale.Fit)
+                    Image(painterResource(R.drawable.topgun_logo2), stringResource(R.string.manufacturers_logo, manufacturer.name), Modifier.size(TGGeo.manufacturerBadge), contentScale = ContentScale.Fit)
                 } else {
-                    TGImage(manufacturer.logo, "${manufacturer.name} logo", Modifier.size(TGGeo.manufacturerBadge), ContentScale.Fit)
+                    TGImage(manufacturer.logo, stringResource(R.string.manufacturers_logo, manufacturer.name), Modifier.size(TGGeo.manufacturerBadge), ContentScale.Fit)
                 }
             }
         }
@@ -118,9 +120,9 @@ fun ManufacturerCard(manufacturer: Manufacturer, onClick: () -> Unit) {
                 } else {
                     GeoFlag(country?.flagIcon, country?.code, null, Modifier.size(TGGeo.manufacturerFlagWidth, TGGeo.manufacturerFlagHeight))
                 }
-                Text(country?.name ?: "Unknown", style = TGText.sailecRegular(12), color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(country?.name ?: stringResource(R.string.manufacturers_unknown), style = TGText.sailecRegular(12), color = c.textSecondary, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Text("${manufacturer.aircraftList.size} Aircraft", style = TGText.sailecBold(12), color = TGBrand.blue)
+            Text(pluralStringResource(R.plurals.manufacturers_aircraft_count, manufacturer.aircraftList.size, manufacturer.aircraftList.size), style = TGText.sailecBold(12), color = TGBrand.blue)
         }
     }
 }

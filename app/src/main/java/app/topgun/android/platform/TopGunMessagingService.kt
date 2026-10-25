@@ -1,6 +1,7 @@
 // ANDROID-ONLY
 package app.topgun.android.platform
 
+import app.topgun.android.R
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -40,7 +41,7 @@ class TopGunMessagingService : FirebaseMessagingService() {
         fun show(context: Context, title: String, body: String) {
             val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Top Gun news", NotificationManager.IMPORTANCE_DEFAULT),
+                NotificationChannel(CHANNEL_ID, context.getString(R.string.notification_channel_news), NotificationManager.IMPORTANCE_DEFAULT),
             )
 
             // Android 13+: without the runtime permission the notification would be dropped anyway.

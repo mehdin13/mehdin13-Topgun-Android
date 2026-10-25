@@ -1,6 +1,8 @@
 // ANDROID-ONLY
 package app.topgun.android.platform.ui
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
@@ -52,7 +54,7 @@ internal object PdfUi {
         Box(modifier, contentAlignment = Alignment.Center) {
             val pdf = file
             when {
-                failed -> Text("Failed to load PDF.")
+                failed -> Text(stringResource(R.string.pdf_load_failed))
                 pdf == null -> CircularProgressIndicator()
                 else -> Pages(pdf, Modifier.fillMaxSize())
             }
@@ -71,7 +73,7 @@ internal object PdfUi {
             onDispose { holder?.let { runCatching { it.second.close(); it.first.close() } } }
         }
         if (holder == null) {
-            Text("Failed to load PDF.")
+            Text(stringResource(R.string.pdf_load_failed))
             return
         }
         val renderer = holder.second
@@ -96,7 +98,7 @@ internal object PdfUi {
                     }
                     val b = bitmap
                     if (b != null) {
-                        Image(b.asImageBitmap(), contentDescription = "Page ${index + 1} of ${renderer.pageCount}", modifier = Modifier.fillMaxWidth().aspectRatio(b.width.toFloat() / b.height))
+                        Image(b.asImageBitmap(), contentDescription = stringResource(R.string.pdf_page_cd, index + 1, renderer.pageCount), modifier = Modifier.fillMaxWidth().aspectRatio(b.width.toFloat() / b.height))
                     } else {
                         Box(Modifier.fillMaxWidth().aspectRatio(0.75f).padding(8.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
                     }

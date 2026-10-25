@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -164,6 +166,7 @@ fun DetailStars(
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(if (onRate != null) TGSpace.xs else TGDetailSpace.zero), verticalAlignment = Alignment.CenterVertically) {
         for (index in 1..5) {
             val on = index <= filled
+            val rateDescription = stringResource(R.string.ds_rate_stars_cd, index)
             val star: @Composable () -> Unit = {
                 Icon(
                     if (on) Icons.Filled.Star else Icons.Outlined.StarBorder,
@@ -178,7 +181,7 @@ fun DetailStars(
                         .defaultMinSize(minWidth = TGSize.tapMin, minHeight = TGSize.tapMin)
                         .clip(CircleShape)
                         .clickable(enabled = enabled, role = Role.Button) { onRate(index) }
-                        .semantics { this.contentDescription = "Rate $index of 5 stars" },
+                        .semantics { this.contentDescription = rateDescription },
                     contentAlignment = Alignment.Center,
                 ) { star() }
             } else {

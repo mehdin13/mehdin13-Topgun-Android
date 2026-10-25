@@ -1,6 +1,8 @@
 // ANDROID-ONLY
 package app.topgun.android.platform.ui
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
@@ -34,7 +36,7 @@ internal object PaywallUi {
         if (!configured) {
             Box(modifier, contentAlignment = Alignment.Center) {
                 Text(
-                    "Purchases aren't available in this build.",
+                    stringResource(R.string.paywall_unavailable),
                     style = TGText.sailecMedium(16),
                     color = TG.colors.textPrimary,
                     textAlign = TextAlign.Center,

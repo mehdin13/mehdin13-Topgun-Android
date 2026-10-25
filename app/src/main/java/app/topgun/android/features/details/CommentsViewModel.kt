@@ -13,8 +13,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 
-/** A row of the comments list (iOS `CommentViewData`). */
-data class CommentRow(val id: Int, val username: String, val text: String, val timeAgo: String)
+/** A row of the comments list (iOS `CommentViewData`). The display name ("You" / "User 7") is built by the composable. */
+data class CommentRow(val id: Int, val userId: Int, val isSelf: Boolean, val text: String, val timeAgo: TimeAgo?)
+
+/** How long ago a comment was written; the composable turns it into localized text. */
+enum class AgoUnit { JustNow, Minutes, Hours, Days }
+data class TimeAgo(val unit: AgoUnit, val amount: Int = 0)
 
 data class CommentsState(
     val comments: Load<List<CommentRow>> = Load.Loading,
@@ -22,7 +26,7 @@ data class CommentsState(
     val sendError: String? = null,
 )
 
-/** iOS `CommentsViewModel`. [selfUserId] (0 when unknown) turns "User 7" into "You" for the signed-in user's own comments. */
+/** iOS `CommentsViewModel`. [selfUserId] (0 when unknown) marks the signed-in user's own comments ("You" instead of "User 7"). */
 class CommentsViewModel(private val api: TopGunApi, private val aircraftId: Int, private val selfUserId: Int) : ViewModel() {
     private val _state = MutableStateFlow(CommentsState())
     val state: StateFlow<CommentsState> = _state.asStateFlow()
@@ -53,7 +57,7 @@ class CommentsViewModel(private val api: TopGunApi, private val aircraftId: Int,
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _state.value = _state.value.copy(isSending = false, sendError = "Failed to post comment: " + e.asApiError().userMessage)
+                _state.value = _state.value.copy(isSending = false, sendError = e.asApiError().userMessage)
                 onDone(false)
             }
         }
@@ -61,24 +65,25 @@ class CommentsViewModel(private val api: TopGunApi, private val aircraftId: Int,
 
     private fun toRow(c: Comment) = CommentRow(
         id = c.id,
-        username = if (selfUserId != 0 && c.user == selfUserId) "You" else "User ${c.user}",
+        userId = c.user,
+        isSelf = selfUserId != 0 && c.user == selfUserId,
         text = c.body,
         timeAgo = timeAgo(c.created),
     )
 
     companion object {
-        /** iOS `timeAgo(from:)`: "Just now", "5m ago", "3h ago", "2d ago"; empty when the date cannot be read. */
-        fun timeAgo(iso: String, now: Instant = Instant.now()): String {
+        /** iOS `timeAgo(from:)`: just now, minutes, hours or days ago; null when the date cannot be read. */
+        fun timeAgo(iso: String, now: Instant = Instant.now()): TimeAgo? {
             val then = runCatching { Instant.parse(iso) }.getOrNull()
                 ?: runCatching { java.time.OffsetDateTime.parse(iso).toInstant() }.getOrNull()
-                ?: return ""
+                ?: return null
             val seconds = (now.epochSecond - then.epochSecond).coerceAtLeast(0)
-            if (seconds < 60) return "Just now"
+            if (seconds < 60) return TimeAgo(AgoUnit.JustNow)
             val minutes = seconds / 60
-            if (minutes < 60) return "${minutes}m ago"
+            if (minutes < 60) return TimeAgo(AgoUnit.Minutes, minutes.toInt())
             val hours = minutes / 60
-            if (hours < 24) return "${hours}h ago"
-            return "${hours / 24}d ago"
+            if (hours < 24) return TimeAgo(AgoUnit.Hours, hours.toInt())
+            return TimeAgo(AgoUnit.Days, (hours / 24).toInt())
         }
     }
 }

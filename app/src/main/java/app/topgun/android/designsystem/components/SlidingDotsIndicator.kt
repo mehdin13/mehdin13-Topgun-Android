@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -45,7 +47,7 @@ fun SlidingDotsIndicator(
     val start = (selected - (window - 1) / 2f).coerceIn(0f, maxStart)
     val leftWeight = start.coerceIn(0f, 1f)
     val rightWeight = (maxStart - start).coerceIn(0f, 1f)
-    val description = "Photo ${(selected + 0.5f).toInt() + 1} of $pageCount"
+    val description = stringResource(R.string.ds_photo_of_cd, (selected + 0.5f).toInt() + 1, pageCount)
 
     Canvas(
         modifier
@@ -84,6 +86,7 @@ private fun edgeScale(distance: Float, weight: Float): Float {
 @Composable
 fun PageCounterPill(current: Int, total: Int, modifier: Modifier = Modifier) {
     if (total <= 1) return
+    val description = stringResource(R.string.ds_photo_of_cd, current + 1, total)
     Text(
         "${current + 1} / $total",
         style = TGText.sailecMedium(13),
@@ -91,6 +94,6 @@ fun PageCounterPill(current: Int, total: Int, modifier: Modifier = Modifier) {
         modifier = modifier
             .background(TGDetailColors.photoBlack.copy(alpha = 0.4f), CircleShape)
             .padding(horizontal = TGSpace.m, vertical = TGSpace.xs)
-            .clearAndSetSemantics { contentDescription = "Photo ${current + 1} of $total" },
+            .clearAndSetSemantics { contentDescription = description },
     )
 }

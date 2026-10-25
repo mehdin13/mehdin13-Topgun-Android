@@ -1,5 +1,6 @@
 package app.topgun.android.features.settings
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,27 +38,32 @@ import app.topgun.android.designsystem.TGSpace
 import app.topgun.android.designsystem.TGText
 import app.topgun.android.designsystem.components.AccountTopBar
 
-/** One launcher icon: [name] is the iOS label (`ChangeIconView.AppIcon.rawValue`); index 0 is the default. */
-internal class AppIconOption(val name: String, val preview: Int)
+/** One launcher icon: [number] follows the iOS label (`ChangeIconView.AppIcon.rawValue`); index 0 is the default. */
+internal class AppIconOption(val number: Int, val preview: Int) {
+    /** 0 is the default icon; the others are numbered like the iOS `AppIcon1..4` names. */
+    @Composable
+    fun label(): String = if (number == 0) stringResource(R.string.settings_app_icon_default) else stringResource(R.string.settings_app_icon_numbered, number)
+}
 
 internal val appIconOptions = listOf(
-    AppIconOption("Default", R.drawable.icon_preview_0),
-    AppIconOption("AppIcon1", R.drawable.icon_preview_1),
-    AppIconOption("AppIcon2", R.drawable.icon_preview_2),
-    AppIconOption("AppIcon3", R.drawable.icon_preview_3),
-    AppIconOption("AppIcon4", R.drawable.icon_preview_4),
+    AppIconOption(0, R.drawable.icon_preview_0),
+    AppIconOption(1, R.drawable.icon_preview_1),
+    AppIconOption(2, R.drawable.icon_preview_2),
+    AppIconOption(3, R.drawable.icon_preview_3),
+    AppIconOption(4, R.drawable.icon_preview_4),
 )
 
 /** iOS `ChangeIconView` ("Choose App Icon" list with a check on the current one). Index 0 is the default icon. */
 @Composable
 fun AppIconScreen(selected: Int, onBack: () -> Unit, onSelect: (Int) -> Unit) {
     Column(Modifier.fillMaxSize().background(settingsBackground())) {
-        AccountTopBar("App Icons", onBack)
+        AccountTopBar(stringResource(R.string.settings_app_icons_title), onBack)
         Column(Modifier.verticalScroll(rememberScrollState()).padding(TGSpace.l), verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
-            Text("Choose App Icon", style = TGText.sailecRegular(12), color = TG.colors.textSecondary, modifier = Modifier.padding(horizontal = TGSpace.l))
+            Text(stringResource(R.string.settings_choose_app_icon), style = TGText.sailecRegular(12), color = TG.colors.textSecondary, modifier = Modifier.padding(horizontal = TGSpace.l))
             Column(Modifier.fillMaxWidth().clip(TGRadius.card).background(TG.colors.card)) {
                 appIconOptions.forEachIndexed { index, icon ->
                     val isSelected = index == selected
+                    val iconLabel = icon.label()
                     Row(
                         Modifier.fillMaxWidth()
                             .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(index) })
@@ -67,13 +73,13 @@ fun AppIconScreen(selected: Int, onBack: () -> Unit, onSelect: (Int) -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(TGSpace.l),
                     ) {
                         Image(
-                            painterResource(icon.preview), contentDescription = "${icon.name} app icon", contentScale = ContentScale.Crop,
+                            painterResource(icon.preview), contentDescription = stringResource(R.string.settings_app_icon_description, iconLabel), contentScale = ContentScale.Crop,
                             modifier = Modifier.size(TGAccountSize.iconPreview).clip(TGAccountRadius.blogListImage),
                         )
-                        Text(icon.name, style = TGText.sailecBold(17), color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
+                        Text(iconLabel, style = TGText.sailecBold(17), color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
                         Icon(
                             if (isSelected) Icons.Filled.CheckCircle else Icons.Outlined.Circle,
-                            contentDescription = if (isSelected) "Selected" else "Not selected",
+                            contentDescription = stringResource(if (isSelected) R.string.selected else R.string.not_selected),
                             tint = if (isSelected) TGAccountColors.systemGreen else TG.colors.textPrimary,
                         )
                     }
@@ -82,7 +88,7 @@ fun AppIconScreen(selected: Int, onBack: () -> Unit, onSelect: (Int) -> Unit) {
             }
             // Android has no API to change the icon directly: the launcher refreshes on its own schedule.
             Text(
-                "It can take a few seconds for your launcher to update.",
+                stringResource(R.string.settings_app_icon_hint),
                 style = TGText.sailecRegular(12), color = TG.colors.textSecondary, modifier = Modifier.padding(horizontal = TGSpace.l),
             )
         }

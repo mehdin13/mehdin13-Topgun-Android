@@ -1,6 +1,8 @@
 // ANDROID-ONLY
 package app.topgun.android.platform.ui
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -121,7 +123,7 @@ internal object ModelUi {
         } else {
             Column(modifier.padding(TGSpace.l), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
                 CircularProgressIndicator(color = TG.colors.accent)
-                Text("Preparing 3D model…", style = TGText.sailecMedium(14), color = TG.colors.textSecondary)
+                Text(stringResource(R.string.model_preparing), style = TGText.sailecMedium(14), color = TG.colors.textSecondary)
             }
         }
     }
@@ -129,8 +131,8 @@ internal object ModelUi {
     @Composable
     private fun DownloadFailed(fetch: Fetch.Failed, modifier: Modifier = Modifier) {
         Column(modifier.padding(TGSpace.l), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.m)) {
-            ErrorText("Could not download the 3D model. Check your connection and try again, or use Open in 3D viewer." + (fetch.message?.let { " ($it)" } ?: ""))
-            Button(onClick = fetch.retry, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin)) { Text("Try again", style = TGText.sailecMedium(16)) }
+            ErrorText(stringResource(R.string.model_download_error) + (fetch.message?.let { " ($it)" } ?: ""))
+            Button(onClick = fetch.retry, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin)) { Text(stringResource(R.string.ds_try_again), style = TGText.sailecMedium(16)) }
         }
     }
 
@@ -152,6 +154,8 @@ internal object ModelUi {
     @Composable
     private fun rememberModelInstance(loader: ModelLoader, file: File): Loaded {
         val cache = ModelCache.get(LocalContext.current)
+        val badFile = stringResource(R.string.model_bad_file)
+        val unknownError = stringResource(R.string.model_unknown_error)
         return produceState<Loaded>(Loaded.Loading, loader, file) {
             value = try {
                 val buffer = readModelBuffer(file)
@@ -160,7 +164,7 @@ internal object ModelUi {
                 throw e
             } catch (e: Throwable) { // Filament throws NPE / IllegalStateException for broken assets
                 if (e is BadModelFile) cache.invalidate(file) // do not keep a bad download
-                Loaded.Failed(e.message ?: "unknown error")
+                Loaded.Failed(if (e is BadModelFile) badFile else e.message ?: unknownError)
             }
         }.value
     }
@@ -185,7 +189,7 @@ internal object ModelUi {
                     val manipulator = rememberCameraManipulator(orbitHomePosition = home, targetPosition = Float3(0f, 0f, 0f))
                     when (val loaded = rememberModelInstance(modelLoader, fetch.file)) {
                         Loaded.Loading -> LoadingModel(null)
-                        is Loaded.Failed -> ErrorText("This 3D model could not be displayed (${loaded.reason}). Try Open in 3D viewer.")
+                        is Loaded.Failed -> ErrorText(stringResource(R.string.model_display_failed, loaded.reason))
                         is Loaded.Ready -> {
                             val nodes = rememberNodes {
                                 add(
@@ -227,8 +231,8 @@ internal object ModelUi {
 
         Box(modifier) {
             when {
-                !availability.isSupported -> ErrorText("AR is not supported on this device.", Modifier.align(Alignment.Center))
-                !granted -> ErrorText("Camera permission is needed to place the aircraft.", Modifier.align(Alignment.Center))
+                !availability.isSupported -> ErrorText(stringResource(R.string.model_ar_unsupported), Modifier.align(Alignment.Center))
+                !granted -> ErrorText(stringResource(R.string.model_ar_camera_permission), Modifier.align(Alignment.Center))
                 else -> when (val fetch = rememberModelFile(modelUrl)) {
                     is Fetch.Loading -> LoadingModel(fetch.progress, Modifier.align(Alignment.Center))
                     is Fetch.Failed -> DownloadFailed(fetch, Modifier.align(Alignment.Center))
@@ -236,7 +240,7 @@ internal object ModelUi {
                 }
             }
             IconButton(onClose, Modifier.align(Alignment.TopStart).padding(16.dp)) {
-                Icon(Icons.Filled.Close, contentDescription = "Close AR")
+                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.model_close_ar))
             }
         }
     }

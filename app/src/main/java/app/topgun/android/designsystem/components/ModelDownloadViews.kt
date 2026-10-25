@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -36,12 +38,14 @@ import app.topgun.android.platform.ModelDownloadState
 import app.topgun.android.platform.formatByteCount
 
 /** "Downloading 3D model… 42%" (no percentage while the server has not told the file size). */
+@Composable
 fun ModelDownloadState.Downloading.title(): String =
-    percent?.let { "Downloading 3D model… $it%" } ?: "Downloading 3D model…"
+    percent?.let { stringResource(R.string.model_downloading_percent, it) } ?: stringResource(R.string.model_downloading)
 
 /** "12.3 MB of 29.0 MB", or just the bytes so far when the total is unknown. */
+@Composable
 fun ModelDownloadState.Downloading.bytesLabel(): String =
-    totalBytes?.let { "${formatByteCount(bytesRead)} of ${formatByteCount(it)}" } ?: formatByteCount(bytesRead)
+    totalBytes?.let { stringResource(R.string.model_bytes_of, formatByteCount(bytesRead), formatByteCount(it)) } ?: formatByteCount(bytesRead)
 
 /**
  * Determinate progress of a 3D model download: title with percentage, a progress bar (indeterminate when the size is
@@ -50,18 +54,20 @@ fun ModelDownloadState.Downloading.bytesLabel(): String =
 @Composable
 fun ModelDownloadProgress(state: ModelDownloadState.Downloading, modifier: Modifier = Modifier) {
     val fraction = state.fraction
+    val title = state.title()
+    val bytes = state.bytesLabel()
     Column(
-        modifier.semantics(mergeDescendants = true) { contentDescription = "${state.title()}. ${state.bytesLabel()}" },
+        modifier.semantics(mergeDescendants = true) { contentDescription = "$title. $bytes" },
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(TGSpace.s),
     ) {
-        Text(state.title(), style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
+        Text(title, style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
         if (fraction != null) {
             LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth(), color = TG.colors.accent)
         } else {
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = TG.colors.accent)
         }
-        Text(state.bytesLabel(), style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
+        Text(bytes, style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
     }
 }
 
@@ -83,24 +89,24 @@ fun ModelOfflineCard(
     ) {
         when (state) {
             ModelDownloadState.NotDownloaded -> ActionRow(
-                icon = Icons.Filled.Download, title = "Download for offline use", subtitle = "Save this 3D model on your device.",
-            ) { ActionButton("Download", onDownload, filled = true) }
+                icon = Icons.Filled.Download, title = stringResource(R.string.model_download_title), subtitle = stringResource(R.string.model_download_subtitle),
+            ) { ActionButton(stringResource(R.string.model_download), onDownload, filled = true) }
 
             is ModelDownloadState.Downloading -> {
                 ModelDownloadProgress(state)
                 TextButton(onClick = onCancel, modifier = Modifier.align(Alignment.CenterHorizontally).defaultMinSize(minHeight = TGSize.tapMin)) {
-                    Text("Cancel", style = TGText.sailecMedium(16), color = TG.colors.accent)
+                    Text(stringResource(R.string.ds_cancel), style = TGText.sailecMedium(16), color = TG.colors.accent)
                 }
             }
 
             is ModelDownloadState.Downloaded -> ActionRow(
-                icon = Icons.Filled.CheckCircle, title = "Downloaded ✓", subtitle = "${formatByteCount(state.bytes)} saved on this device.",
+                icon = Icons.Filled.CheckCircle, title = stringResource(R.string.model_downloaded), subtitle = stringResource(R.string.model_saved_on_device, formatByteCount(state.bytes)),
                 iconTint = TGDetailColors.manufacturerGreen,
-            ) { ActionButton("Remove", onRemove, filled = false) }
+            ) { ActionButton(stringResource(R.string.model_remove), onRemove, filled = false) }
 
             is ModelDownloadState.Failed -> ActionRow(
-                icon = Icons.Filled.ErrorOutline, title = "Download failed", subtitle = state.message, iconTint = TGBrand.red,
-            ) { ActionButton("Retry", onDownload, filled = true) }
+                icon = Icons.Filled.ErrorOutline, title = stringResource(R.string.model_download_failed), subtitle = state.message, iconTint = TGBrand.red,
+            ) { ActionButton(stringResource(R.string.ds_retry), onDownload, filled = true) }
         }
     }
 }

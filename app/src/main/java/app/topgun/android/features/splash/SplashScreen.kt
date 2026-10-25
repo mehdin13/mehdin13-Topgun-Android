@@ -1,5 +1,7 @@
 package app.topgun.android.features.splash
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,8 +36,9 @@ fun SplashScreen(onFinished: () -> Unit) {
         finishOnce()
     }
 
+    val appName = stringResource(R.string.app_name)
     Box(
-        Modifier.fillMaxSize().background(TGEntryColors.black).semantics { contentDescription = "Top Gun" },
+        Modifier.fillMaxSize().background(TGEntryColors.black).semantics { contentDescription = appName },
         contentAlignment = Alignment.Center,
     ) {
         LocalPlatformUi.current.Lottie(

@@ -40,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import app.topgun.android.R
 import app.topgun.android.designsystem.TG
@@ -67,21 +68,22 @@ sealed interface FeatureTarget {
 }
 
 /** iOS `FeaturedSectionItem` with its destination reduced to a [FeatureTarget]. */
-data class FeatureCard(val title: String, val subtitle: String, val icon: ImageVector, val target: FeatureTarget)
+data class FeatureCard(val titleRes: Int, val subtitleRes: Int, val icon: ImageVector, val target: FeatureTarget)
 
 /** Same order and texts as `WelcomeSection.featuredSections`; gradients are assigned by position. */
 val FeatureCards = listOf(
-    FeatureCard("Top Countries", "Nations with factories", Icons.Filled.Flag, FeatureTarget.Countries),
-    FeatureCard("Key Manufacturers", "Leading global brands", Icons.Filled.Settings, FeatureTarget.Manufacturers),
-    FeatureCard("Topgun Selected", "Elite aircraft", Icons.Filled.Star, FeatureTarget.CustomList("Topgun Selected")),
-    FeatureCard("WW2 Best", "Legendary warbirds", Icons.Filled.Bolt, FeatureTarget.CustomList("Top WWII")),
-    FeatureCard("Cold War Icons", "East vs West legends", Icons.Filled.Security, FeatureTarget.CustomList("Cold War Icons")),
-    FeatureCard("Stealth Dominance", "Invisible warriors", Icons.Filled.VisibilityOff, FeatureTarget.CustomList("Stealth Dominance")),
-    FeatureCard("Carrier Borne", "Navy's finest", Icons.Filled.Waves, FeatureTarget.CustomList("Carrier Borne")),
-    FeatureCard("Best Helicopter", "Vertical champions", Icons.Filled.Shield, FeatureTarget.CustomList("Best Helicopter")),
+    FeatureCard(R.string.home_card_countries_title, R.string.home_card_countries_subtitle, Icons.Filled.Flag, FeatureTarget.Countries),
+    FeatureCard(R.string.home_card_manufacturers_title, R.string.home_card_manufacturers_subtitle, Icons.Filled.Settings, FeatureTarget.Manufacturers),
+    FeatureCard(R.string.home_card_selected_title, R.string.home_card_selected_subtitle, Icons.Filled.Star, FeatureTarget.CustomList("Topgun Selected")),
+    FeatureCard(R.string.home_card_ww2_title, R.string.home_card_ww2_subtitle, Icons.Filled.Bolt, FeatureTarget.CustomList("Top WWII")),
+    FeatureCard(R.string.home_card_coldwar_title, R.string.home_card_coldwar_subtitle, Icons.Filled.Security, FeatureTarget.CustomList("Cold War Icons")),
+    FeatureCard(R.string.home_card_stealth_title, R.string.home_card_stealth_subtitle, Icons.Filled.VisibilityOff, FeatureTarget.CustomList("Stealth Dominance")),
+    FeatureCard(R.string.home_card_carrier_title, R.string.home_card_carrier_subtitle, Icons.Filled.Waves, FeatureTarget.CustomList("Carrier Borne")),
+    FeatureCard(R.string.home_card_helicopter_title, R.string.home_card_helicopter_subtitle, Icons.Filled.Shield, FeatureTarget.CustomList("Best Helicopter")),
 )
 
 /** The category chips of HomeView, with their tile colors and drawable icons. */
+/** [name] is the value sent to the API; the chip shows its translation (see [optionLabel]). */
 class HomeCategory(val name: String, val iconRes: Int, val tint: Color)
 
 val HomeCategories = listOf(
@@ -104,7 +106,7 @@ fun HomeHeader(modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth().padding(top = TGHomeSpace.headerTop), horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
             painterResource(if (TG.colors.isDark) R.drawable.topgun_logo8 else R.drawable.topgun_logo6),
-            contentDescription = "Top Gun logo",
+            contentDescription = stringResource(R.string.home_logo_description),
             modifier = Modifier.size(TGHomeSize.logoWidth, TGHomeSize.logoHeight),
         )
         Text("Top Gun", style = TGText.logoTitle, color = TG.colors.textPrimary)
@@ -123,9 +125,9 @@ fun SearchAndFilterRow(
     Row(modifier.fillMaxWidth().padding(top = TGSpace.l), verticalAlignment = Alignment.CenterVertically) {
         TGSearchField(searchText, onSearchTextChange, onSearch, Modifier.weight(1f))
         Box(
-            Modifier.size(TGSize.tapMin).clickable(role = Role.Button, onClickLabel = "Open filters", onClick = onOpenFilter),
+            Modifier.size(TGSize.tapMin).clickable(role = Role.Button, onClickLabel = stringResource(R.string.home_open_filters), onClick = onOpenFilter),
             contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Filled.Tune, contentDescription = "Filter", tint = TGHomeColors.systemGray) }
+        ) { Icon(Icons.Filled.Tune, contentDescription = stringResource(R.string.home_filter), tint = TGHomeColors.systemGray) }
     }
 }
 
@@ -133,12 +135,12 @@ fun SearchAndFilterRow(
 @Composable
 fun WelcomeSection(onOpen: (FeatureTarget) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(TGHomeSpace.headerTop)) {
-        Text("Welcome on board!", style = TGText.title, color = TG.colors.textPrimary)
+        Text(stringResource(R.string.home_welcome), style = TGText.title, color = TG.colors.textPrimary)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(TGHomeSpace.section)) {
             items(FeatureCards.size) { i ->
                 val card = FeatureCards[i]
                 val gradients = TGHomeColors.featureGradients
-                FeaturedSectionCard(card.title, card.subtitle, card.icon, gradients[i % gradients.size], onClick = { onOpen(card.target) })
+                FeaturedSectionCard(stringResource(card.titleRes), stringResource(card.subtitleRes), card.icon, gradients[i % gradients.size], onClick = { onOpen(card.target) })
             }
         }
     }
@@ -149,13 +151,13 @@ fun WelcomeSection(onOpen: (FeatureTarget) -> Unit, modifier: Modifier = Modifie
 fun CategoriesSection(selected: String?, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     Column(modifier.fillMaxWidth()) {
         Text(
-            "Category", style = TGText.sectionTitle, color = TG.colors.textPrimary,
+            stringResource(R.string.home_category), style = TGText.sectionTitle, color = TG.colors.textPrimary,
             modifier = Modifier.padding(top = TGHomeSpace.categoryTop),
         )
         LazyRow {
             items(HomeCategories.size) { i ->
                 val c = HomeCategories[i]
-                CategoryTile(c.name, c.iconRes, c.tint, selected = selected == c.name, onClick = { onSelect(c.name) })
+                CategoryTile(optionLabel(c.name), c.iconRes, c.tint, selected = selected == c.name, onClick = { onSelect(c.name) })
             }
         }
     }
@@ -182,21 +184,21 @@ fun LazyListScope.aircraftContent(
     onLoadMore: () -> Unit,
 ) {
     when {
-        state.isLoading -> item(key = "loading") { LoadingState("Loading aircraft...") }
+        state.isLoading -> item(key = "loading") { LoadingState(stringResource(R.string.home_loading_aircraft)) }
         state.error != null -> item(key = "error") {
-            EmptyState(state.error.userMessage.ifEmpty { "Oops! Something went wrong" }, icon = Icons.Outlined.Flight, onRetry = onRetry)
+            EmptyState(state.error.userMessage.ifEmpty { stringResource(R.string.home_error_generic) }, icon = Icons.Outlined.Flight, onRetry = onRetry)
         }
         state.items.isEmpty() -> item(key = "empty") {
             if (state.source is HomeSource.Search) {
-                EmptyState("No results found")
+                EmptyState(stringResource(R.string.home_no_results))
             } else {
-                EmptyState("No aircraft available", icon = Icons.Outlined.Flight, onRetry = onShowAll)
+                EmptyState(stringResource(R.string.home_no_aircraft), icon = Icons.Outlined.Flight, onRetry = onShowAll)
             }
         }
         else -> {
             item(key = "list-title") {
                 Text(
-                    "Aircraft List", style = TGText.sectionTitle, color = TG.colors.textPrimary,
+                    stringResource(R.string.home_aircraft_list), style = TGText.sectionTitle, color = TG.colors.textPrimary,
                     modifier = Modifier.fillMaxWidth().padding(top = TGHomeSpace.listTitleTop, bottom = TGSpace.s),
                 )
             }
@@ -220,24 +222,24 @@ private fun AircraftRow(aircraft: Aircraft, isLocked: Boolean, actions: Aircraft
         } else {
             AircraftListCard(
                 aircraft, isLocked = false, onClick = { actions.onOpen(aircraft) },
-                onLongClick = { menuOpen = true }, onLongClickLabel = "Favorite and share options",
+                onLongClick = { menuOpen = true }, onLongClickLabel = stringResource(R.string.home_row_options),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 if (aircraft.isFavorite) {
                     DropdownMenuItem(
-                        text = { Text("Remove from Favorites", color = TGBrand.red) },
+                        text = { Text(stringResource(R.string.home_remove_favorite), color = TGBrand.red) },
                         leadingIcon = { Icon(Icons.Outlined.Favorite, contentDescription = null, tint = TGBrand.red) },
                         onClick = { menuOpen = false; actions.onToggleFavorite(aircraft) },
                     )
                 } else {
                     DropdownMenuItem(
-                        text = { Text("Add to Favorites") },
+                        text = { Text(stringResource(R.string.home_add_favorite)) },
                         leadingIcon = { Icon(Icons.Outlined.FavoriteBorder, contentDescription = null) },
                         onClick = { menuOpen = false; actions.onToggleFavorite(aircraft) },
                     )
                 }
                 DropdownMenuItem(
-                    text = { Text("Share") },
+                    text = { Text(stringResource(R.string.home_share)) },
                     leadingIcon = { Icon(Icons.Outlined.Share, contentDescription = null) },
                     onClick = { menuOpen = false; actions.onShare(aircraft) },
                 )

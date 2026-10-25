@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +54,7 @@ fun TGLoadingImage(
 ) {
     val media = LocalAppContainer.current.media
     val context = LocalContext.current
+    val loadingDescription = stringResource(R.string.ds_image_loading)
     val url = remember(path) { media.resolve(path) }
     var attempt by remember(url) { mutableIntStateOf(0) }
     Box(modifier.background(TG.colors.card)) {
@@ -68,7 +71,7 @@ fun TGLoadingImage(
                 contentScale = contentScale,
                 modifier = Modifier.matchParentSize(),
                 loading = {
-                    Box(Modifier.fillMaxSize().semantics { this.contentDescription = "Loading image" }, contentAlignment = Alignment.Center) {
+                    Box(Modifier.fillMaxSize().semantics { this.contentDescription = loadingDescription }, contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(Modifier.size(TGImageState.spinner), color = TG.colors.accent, strokeWidth = TGImageState.spinnerStroke)
                     }
                 },
@@ -81,10 +84,11 @@ fun TGLoadingImage(
 /** Error state: icon and caption, tappable to retry when [onRetry] is given (48dp minimum target). */
 @Composable
 private fun ImageUnavailable(modifier: Modifier, description: String?, onRetry: (() -> Unit)?) {
-    val label = if (onRetry != null) "Image failed to load. Tap to retry" else "Image not available"
+    val label = stringResource(if (onRetry != null) R.string.ds_image_failed_retry_cd else R.string.ds_image_unavailable)
+    val retryLabel = stringResource(R.string.ds_image_retry_label)
     BoxWithConstraints(
         modifier.then(
-            if (onRetry != null) Modifier.clickable(role = Role.Button, onClickLabel = "Retry loading the image", onClick = onRetry) else Modifier,
+            if (onRetry != null) Modifier.clickable(role = Role.Button, onClickLabel = retryLabel, onClick = onRetry) else Modifier,
         ).semantics { contentDescription = if (description.isNullOrBlank()) label else "$description. $label" },
         contentAlignment = Alignment.Center,
     ) {
@@ -100,7 +104,7 @@ private fun ImageUnavailable(modifier: Modifier, description: String?, onRetry: 
             )
             if (showCaption) {
                 Text(
-                    if (onRetry != null) "Couldn't load the image.\nTap to retry" else "Image not available",
+                    stringResource(if (onRetry != null) R.string.ds_image_load_failed_caption else R.string.ds_image_unavailable),
                     style = TGText.sailecMedium(14), color = TG.colors.textSecondary, textAlign = TextAlign.Center,
                 )
             }

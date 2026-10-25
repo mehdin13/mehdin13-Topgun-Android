@@ -1,5 +1,6 @@
 package app.topgun.android.features.badges
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -79,7 +80,7 @@ fun BadgeDetail(badge: Badge) {
                 }
             }
             TGImage(
-                badge.icon, contentDescription = "${badge.name.orEmpty()} badge",
+                badge.icon, contentDescription = stringResource(R.string.badges_badge, badge.name.orEmpty()),
                 modifier = Modifier.size(TGAccountSize.badgeCardImage).graphicsLayer { translationX = drag.x / 5f; translationY = drag.y / 5f },
                 contentScale = ContentScale.Fit,
             )

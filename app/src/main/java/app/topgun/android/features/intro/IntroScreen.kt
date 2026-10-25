@@ -1,5 +1,6 @@
 package app.topgun.android.features.intro
 
+import app.topgun.android.R
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
@@ -30,6 +31,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,7 +90,7 @@ internal fun IntroContent(state: IntroState, onNext: () -> Unit, onPrevious: () 
             ) {
                 Image(
                     painterResource(page.image),
-                    contentDescription = page.title.replace("\n", " "),
+                    contentDescription = stringResource(page.title).replace("\n", " "),
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize().padding(TGEntry.pagePadding),
                 )
@@ -102,13 +104,13 @@ internal fun IntroContent(state: IntroState, onNext: () -> Unit, onPrevious: () 
                 verticalArrangement = Arrangement.spacedBy(TGSpace.s),
             ) {
                 Text(
-                    page.title,
+                    stringResource(page.title),
                     style = TGEntry.titleStyle,
                     color = TG.colors.textPrimary,
                     modifier = Modifier.semantics { heading() },
                 )
                 Text(
-                    page.subtitle,
+                    stringResource(page.subtitle),
                     style = TGEntry.subtitleStyle,
                     color = TG.colors.textPrimary,
                     modifier = Modifier.padding(top = TGEntry.pagePadding),
@@ -116,10 +118,10 @@ internal fun IntroContent(state: IntroState, onNext: () -> Unit, onPrevious: () 
                 if (!page.displaysAction) {
                     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
                         EntryPageIndicator(state.indicatorCount, state.index)
-                        EntryPillButton("Next", onNext, Modifier.fillMaxWidth(TGEntry.nextButtonWidthFraction))
+                        EntryPillButton(stringResource(R.string.intro_next), onNext, Modifier.fillMaxWidth(TGEntry.nextButtonWidthFraction))
                     }
                 } else {
-                    EntryPillButton("Continue", onContinue, Modifier.fillMaxWidth().padding(top = TGSpace.l))
+                    EntryPillButton(stringResource(R.string.intro_continue), onContinue, Modifier.fillMaxWidth().padding(top = TGSpace.l))
                 }
             }
         }
@@ -130,10 +132,10 @@ internal fun IntroContent(state: IntroState, onNext: () -> Unit, onPrevious: () 
                     .align(Alignment.TopStart)
                     .size(TGSize.tapMin)
                     .graphicsLayer { translationY = -(1f - show) * travel - hide * travel }
-                    .clickable(onClickLabel = "Previous page", onClick = onPrevious),
+                    .clickable(onClickLabel = stringResource(R.string.intro_previous_page), onClick = onPrevious),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous page", tint = TG.colors.textPrimary)
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = stringResource(R.string.intro_previous_page), tint = TG.colors.textPrimary)
             }
         }
     }

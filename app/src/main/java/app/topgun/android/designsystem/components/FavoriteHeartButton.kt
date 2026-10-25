@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -34,7 +36,7 @@ fun FavoriteHeartButton(aircraftName: String, onClick: () -> Unit, modifier: Mod
         ) {
             Icon(
                 Icons.Filled.Favorite,
-                contentDescription = "Remove $aircraftName from favorites",
+                contentDescription = stringResource(R.string.ds_remove_from_favorites_cd, aircraftName),
                 tint = TGBrand.red,
                 modifier = Modifier.padding(TGSpace.m),
             )

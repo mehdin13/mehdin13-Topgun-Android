@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -49,7 +51,7 @@ fun TGSearchField(
     onTextChange: (String) -> Unit,
     onSubmit: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search for aircraft...",
+    placeholder: String = stringResource(R.string.ds_search_placeholder),
 ) {
     val focus = LocalFocusManager.current
     var editing by remember { mutableStateOf(false) }
@@ -80,7 +82,7 @@ fun TGSearchField(
             }
             if (text.isNotEmpty()) {
                 Icon(
-                    Icons.Filled.Cancel, contentDescription = "Clear search", tint = TGHomeColors.systemGray,
+                    Icons.Filled.Cancel, contentDescription = stringResource(R.string.ds_clear_search), tint = TGHomeColors.systemGray,
                     modifier = Modifier.size(TGSize.tapMin).clickable(role = Role.Button) { onTextChange("") }.padding(TGSpace.m),
                 )
             }
@@ -98,7 +100,7 @@ fun TGSearchField(
                     }
                     .padding(horizontal = TGSpace.s),
                 contentAlignment = Alignment.Center,
-            ) { Text("Cancel", style = TGHomeText.body, color = TG.colors.accent) }
+            ) { Text(stringResource(R.string.ds_cancel), style = TGHomeText.body, color = TG.colors.accent) }
         }
     }
 }

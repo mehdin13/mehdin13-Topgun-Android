@@ -1,5 +1,8 @@
 package app.topgun.android.features.settings
 
+import app.topgun.android.R
+import app.topgun.android.data.AppLanguage
+import app.topgun.android.data.UiText
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.topgun.android.data.AppPreferences
@@ -24,8 +27,8 @@ class SettingsViewModel(
     val cache: StateFlow<ModelCacheInfo> = _cache.asStateFlow()
 
     /** One-shot message shown as a snackbar (iOS Toast). */
-    private val _toast = MutableStateFlow<String?>(null)
-    val toast: StateFlow<String?> = _toast.asStateFlow()
+    private val _toast = MutableStateFlow<UiText?>(null)
+    val toast: StateFlow<UiText?> = _toast.asStateFlow()
 
     private val _restoring = MutableStateFlow(false)
     val restoring: StateFlow<Boolean> = _restoring.asStateFlow()
@@ -37,9 +40,9 @@ class SettingsViewModel(
     fun clearCache() {
         try {
             platform.clearModelCache()
-            _toast.value = "Cache cleared. All 3D models removed."
+            _toast.value = UiText.Res(R.string.settings_toast_cache_cleared)
         } catch (e: Exception) {
-            _toast.value = "Failed to clear cache."
+            _toast.value = UiText.Res(R.string.settings_toast_cache_clear_failed)
         }
         refreshCache()
     }
@@ -50,6 +53,9 @@ class SettingsViewModel(
     }
 
     fun setAppearance(value: Appearance) = prefs.setAppearance(value)
+
+    /** Saves the UI language (null = follow the device); `MainActivity` observes it and recreates itself. */
+    fun setLanguage(value: AppLanguage?) = prefs.setLanguage(value)
 
     private val _appIcon = MutableStateFlow(platform.currentAppIcon())
     /** Index of the selected launcher icon (iOS `ChangeIconView.currentAppIcon`); 0 is the default. */
@@ -62,7 +68,7 @@ class SettingsViewModel(
             platform.setAppIcon(index)
             _appIcon.value = index
         } catch (e: Exception) {
-            _toast.value = "Couldn't change the app icon."
+            _toast.value = UiText.Res(R.string.settings_toast_icon_failed)
         }
     }
 
@@ -73,11 +79,11 @@ class SettingsViewModel(
             try {
                 val status = platform.restorePurchases()
                 user.applyProStatus(status)
-                _toast.value = if (status is ProStatus.Pro) "Subscription restored." else "No active subscription found."
+                _toast.value = UiText.Res(if (status is ProStatus.Pro) R.string.settings_toast_restored else R.string.settings_toast_no_subscription)
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _toast.value = "Restore failed. Please try again."
+                _toast.value = UiText.Res(R.string.settings_toast_restore_failed)
             } finally {
                 _restoring.value = false
             }
@@ -99,7 +105,7 @@ class SettingsViewModel(
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e
             } catch (e: Throwable) {
-                _toast.value = "We couldn't delete your account. Please try again."
+                _toast.value = UiText.Res(R.string.settings_toast_delete_failed)
             } finally {
                 _deleting.value = false
             }

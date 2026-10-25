@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -39,9 +41,9 @@ fun GradientLoadMoreButton(isLoading: Boolean, onClick: () -> Unit, modifier: Mo
     ) {
         if (isLoading) {
             CircularProgressIndicator(Modifier.size(TGSpace.l), color = TGHomeColors.white, strokeWidth = TGSpace.xs / 2)
-            Text("Loading more...", style = TGText.sailecRegular(14), color = TGHomeColors.white, modifier = Modifier.padding(start = TGSpace.s))
+            Text(stringResource(R.string.ds_loading_more), style = TGText.sailecRegular(14), color = TGHomeColors.white, modifier = Modifier.padding(start = TGSpace.s))
         } else {
-            Text("Load More", style = TGText.sailecMedium(14), color = TGHomeColors.white)
+            Text(stringResource(R.string.ds_load_more), style = TGText.sailecMedium(14), color = TGHomeColors.white)
         }
     }
 }

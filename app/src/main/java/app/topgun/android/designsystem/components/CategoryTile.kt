@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -42,11 +44,12 @@ fun CategoryTile(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val categoryDescription = stringResource(R.string.ds_category_cd, name)
     Column(
         modifier
             .clip(TGRadius.image)
             .clickable(role = Role.Tab, onClick = onClick)
-            .semantics { this.selected = selected; contentDescription = "$name category" }
+            .semantics { this.selected = selected; contentDescription = categoryDescription }
             .padding(TGHomeSpace.categoryTile),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {

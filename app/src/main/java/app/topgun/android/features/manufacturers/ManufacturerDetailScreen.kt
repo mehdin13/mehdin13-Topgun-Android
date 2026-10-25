@@ -1,5 +1,6 @@
 package app.topgun.android.features.manufacturers
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -69,12 +70,12 @@ fun ManufacturerDetailScreen(id: Int, onBack: () -> Unit, onOpenAircraft: (Int) 
     val platform = LocalAppContainer.current.platform
     Box(Modifier.fillMaxSize().background(TG.colors.background)) {
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading manufacturer...", Modifier.align(Alignment.Center))
+            Load.Loading -> LoadingState(stringResource(R.string.manufacturers_loading_one), Modifier.align(Alignment.Center))
             is Load.Failed -> ErrorState(s.error.userMessage, Modifier.align(Alignment.Center), onRetry = vm::load)
             is Load.Loaded -> ManufacturerDetailContent(s.value, onOpenAircraft, platform::openUrl)
         }
         GeoOverlayButton(
-            Icons.AutoMirrored.Filled.ArrowBack, "Back", onBack,
+            Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.manufacturers_back), onBack,
             Modifier.statusBarsPadding().padding(start = TGSpace.s, top = TGSpace.xs),
         )
     }
@@ -100,11 +101,11 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
             ) {
                 if (manufacturer.logo.isNullOrBlank()) {
                     androidx.compose.foundation.Image(
-                        painterResource(R.drawable.company_sample), "${manufacturer.name} logo",
+                        painterResource(R.drawable.company_sample), stringResource(R.string.manufacturers_logo, manufacturer.name),
                         Modifier.fillMaxSize(), contentScale = ContentScale.Crop,
                     )
                 } else {
-                    TGImage(manufacturer.logo, "${manufacturer.name} logo", Modifier.fillMaxSize(), ContentScale.Fit)
+                    TGImage(manufacturer.logo, stringResource(R.string.manufacturers_logo, manufacturer.name), Modifier.fillMaxSize(), ContentScale.Fit)
                 }
             }
         }
@@ -113,22 +114,22 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                manufacturer.name.ifEmpty { "Manufacturer" }, style = TGText.title, color = c.textPrimary,
+                manufacturer.name.ifEmpty { stringResource(R.string.manufacturers_fallback_name) }, style = TGText.title, color = c.textPrimary,
                 modifier = Modifier.weight(1f),
             )
             manufacturer.wikipediaLink?.takeIf { it.isNotBlank() }?.let { link ->
-                LinkCircle("Wikipedia", TGBrand.blue, { onOpenUrl(link) }) {
+                LinkCircle(stringResource(R.string.manufacturers_wikipedia), TGBrand.blue, { onOpenUrl(link) }) {
                     Text("W", style = TGText.sailecBold(16), color = TGBrand.blue)
                 }
             }
             manufacturer.websiteLink?.takeIf { it.isNotBlank() }?.let { link ->
-                LinkCircle("Website", TGBrand.red, { onOpenUrl(link) }) {
+                LinkCircle(stringResource(R.string.manufacturers_website), TGBrand.red, { onOpenUrl(link) }) {
                     Icon(Icons.Filled.Public, contentDescription = null, tint = TGBrand.red)
                 }
             }
         }
         Text(
-            manufacturer.description?.takeIf { it.isNotBlank() } ?: "No description available",
+            manufacturer.description?.takeIf { it.isNotBlank() } ?: stringResource(R.string.manufacturers_no_description),
             style = TGText.sailecRegular(16), color = c.textSecondary,
             modifier = Modifier.padding(start = TGSpace.l, end = TGSpace.l, top = TGSpace.s),
         )
@@ -137,11 +138,11 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Equipment:", style = TGText.sailecBold(20), color = c.textPrimary)
+            Text(stringResource(R.string.manufacturers_equipment), style = TGText.sailecBold(20), color = c.textPrimary)
             CategoryFilter(category, categories) { category = it }
         }
         if (equipment.isEmpty()) {
-            Text("No aircraft", style = TGText.body, color = c.textSecondary, modifier = Modifier.padding(TGSpace.l))
+            Text(stringResource(R.string.manufacturers_no_aircraft), style = TGText.body, color = c.textSecondary, modifier = Modifier.padding(TGSpace.l))
         } else {
             LazyHorizontalGrid(
                 rows = GridCells.Fixed(2),
@@ -152,7 +153,7 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
             ) {
                 items(equipment.distinctBy { it.id }, key = { it.id }) { plane ->
                     // The manufacturer's aircraft rows carry no thumbnail (docs/BACKEND_GAPS.md), so the placeholder shows.
-                    EquipmentCard(plane.name ?: "Unknown", null, isLocked = false, onClick = { onOpenAircraft(plane.id) })
+                    EquipmentCard(plane.name ?: stringResource(R.string.manufacturers_unknown), null, isLocked = false, onClick = { onOpenAircraft(plane.id) })
                 }
             }
         }
@@ -165,7 +166,7 @@ fun ManufacturerDetailContent(manufacturer: Manufacturer, onOpenAircraft: (Int) 
 private fun LinkCircle(description: String, tint: Color, onClick: () -> Unit, content: @Composable () -> Unit) {
     Box(
         Modifier.size(TGSize.tapMin).clip(CircleShape).background(tint.copy(alpha = TGGeo.tint))
-            .clickable(role = Role.Button, onClickLabel = "Open $description", onClick = onClick),
+            .clickable(role = Role.Button, onClickLabel = stringResource(R.string.manufacturers_open_link, description), onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { content() }
 }

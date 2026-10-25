@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -24,8 +26,9 @@ fun EntryPageIndicator(
     activeTint: Color = if (TG.colors.isDark) TG.colors.accent else TGEntryColors.black,
     inactiveTint: Color = TGBrand.gray.copy(alpha = 0.5f),
 ) {
+    val pageDescription = stringResource(R.string.ds_page_of_cd, currentPage + 1, totalPages)
     Row(
-        modifier.clearAndSetSemantics { contentDescription = "Page ${currentPage + 1} of $totalPages" },
+        modifier.clearAndSetSemantics { contentDescription = pageDescription },
         horizontalArrangement = Arrangement.spacedBy(TGEntry.indicatorSpacing),
     ) {
         repeat(totalPages) { index ->

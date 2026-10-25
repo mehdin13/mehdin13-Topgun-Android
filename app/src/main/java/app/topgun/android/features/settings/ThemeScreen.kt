@@ -1,5 +1,7 @@
 package app.topgun.android.features.settings
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -37,7 +39,7 @@ import app.topgun.android.designsystem.components.AccountTopBar
 fun ThemeScreen(onBack: () -> Unit, onSelect: (Appearance) -> Unit) {
     val appearance by LocalAppContainer.current.prefs.appearance.collectAsStateWithLifecycle()
     Column(Modifier.fillMaxSize().background(settingsBackground())) {
-        AccountTopBar("Appearance", onBack)
+        AccountTopBar(stringResource(R.string.settings_theme_title), onBack)
         Column(Modifier.padding(TGSpace.l).fillMaxWidth().clip(TGRadius.card).background(TG.colors.card)) {
             Appearance.entries.forEachIndexed { index, theme ->
                 val selected = theme == appearance
@@ -50,10 +52,17 @@ fun ThemeScreen(onBack: () -> Unit, onSelect: (Appearance) -> Unit) {
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Text(
-                        theme.label, style = TGText.sailecRegular(17),
+                        stringResource(
+                            when (theme) {
+                                Appearance.System -> R.string.settings_appearance_system
+                                Appearance.Light -> R.string.settings_appearance_light
+                                Appearance.Dark -> R.string.settings_appearance_dark
+                            },
+                        ),
+                        style = TGText.sailecRegular(17),
                         color = if (selected) TG.colors.accent else TG.colors.textPrimary,
                     )
-                    if (selected) Icon(Icons.Filled.Check, contentDescription = "Selected", tint = TG.colors.accent)
+                    if (selected) Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.selected), tint = TG.colors.accent)
                 }
                 if (index < Appearance.entries.lastIndex) HorizontalDivider(Modifier.padding(start = TGSpace.l), color = TGBrand.gray.copy(alpha = 0.4f))
             }

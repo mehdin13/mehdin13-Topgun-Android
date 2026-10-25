@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
@@ -32,6 +33,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.topgun.android.R
 import app.topgun.android.data.LocalAppContainer
+import app.topgun.android.data.UiText
+import app.topgun.android.data.asString
 import app.topgun.android.data.containerViewModel
 import app.topgun.android.designsystem.TG
 import app.topgun.android.designsystem.TGBrand
@@ -69,7 +72,7 @@ fun SignInScreen(onDismiss: () -> Unit) {
 @Composable
 internal fun SignInContent(
     isLoading: Boolean,
-    error: String?,
+    error: UiText?,
     onGoogle: () -> Unit,
     onClose: () -> Unit,
     onOpenPrivacy: () -> Unit,
@@ -79,11 +82,11 @@ internal fun SignInContent(
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painterResource(R.drawable.topgunlogo),
-                contentDescription = "Top Gun logo",
+                contentDescription = stringResource(R.string.auth_logo_description),
                 modifier = Modifier.padding(top = TGEntry.signInLogoTop).size(TGEntry.signInLogo),
             )
             Text(
-                "Register to unlock features like:\n- Add to favorites\n- Comment and rate\n- Buy the premium version",
+                stringResource(R.string.auth_register_intro),
                 style = TGEntry.signInBodyStyle.copy(lineHeight = TGEntry.signInBodyStyle.fontSize * 1.4f),
                 color = TG.colors.textPrimary,
                 textAlign = TextAlign.Center,
@@ -93,7 +96,7 @@ internal fun SignInContent(
 
             if (error != null) {
                 Text(
-                    error,
+                    error.asString(),
                     style = TGEntry.footnoteStyle,
                     color = TGBrand.red,
                     textAlign = TextAlign.Center,
@@ -104,7 +107,7 @@ internal fun SignInContent(
             }
             SocialLoginButton(
                 icon = painterResource(R.drawable.google),
-                text = "Sign in with Google",
+                text = stringResource(R.string.auth_sign_in_google),
                 onClick = onGoogle,
                 loading = isLoading,
                 modifier = Modifier.padding(horizontal = TGSpace.l, vertical = TGSpace.xs / 2),
@@ -116,20 +119,20 @@ internal fun SignInContent(
                 horizontalArrangement = Arrangement.spacedBy(TGSpace.xs),
             ) {
                 TextButton(onOpenPrivacy, Modifier.heightIn(min = TGSize.tapMin)) {
-                    Text("Privacy Policy", style = TGEntry.footnoteStyle, color = TG.colors.accent)
+                    Text(stringResource(R.string.auth_privacy_policy), style = TGEntry.footnoteStyle, color = TG.colors.accent)
                 }
                 Text("|", style = TGEntry.footnoteStyle, color = TG.colors.textSecondary)
                 TextButton(onOpenTerms, Modifier.heightIn(min = TGSize.tapMin)) {
-                    Text("Terms of Service", style = TGEntry.footnoteStyle, color = TG.colors.accent)
+                    Text(stringResource(R.string.auth_terms_of_service), style = TGEntry.footnoteStyle, color = TG.colors.accent)
                 }
             }
         }
         // iOS presents this as a sheet that is swiped away; Android has a visible close button.
         Box(
-            Modifier.align(Alignment.TopStart).size(TGSize.tapMin).clickable(onClickLabel = "Close", onClick = onClose),
+            Modifier.align(Alignment.TopStart).size(TGSize.tapMin).clickable(onClickLabel = stringResource(R.string.auth_close), onClick = onClose),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(Icons.Filled.Close, contentDescription = "Close", tint = TG.colors.textPrimary)
+            Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.auth_close), tint = TG.colors.textPrimary)
         }
     }
 }

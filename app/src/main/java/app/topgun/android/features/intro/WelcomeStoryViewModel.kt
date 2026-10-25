@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /** One slide of the welcome story (iOS `WelcomeAppStoryViewModel.WelcomeModel`). */
-data class WelcomeSlide(val image: Int, val title: String, val subtitle: String)
+data class WelcomeSlide(val image: Int, val title: Int, val subtitle: Int)
 
 /**
  * iOS `WelcomeAppStoryViewModel`: the selected slide plus the auto-advance step (the 3 s timer lives in the screen).
@@ -25,10 +25,10 @@ class WelcomeStoryViewModel(val slides: List<WelcomeSlide> = defaultSlides) : Vi
 
     companion object {
         val defaultSlides = listOf(
-            WelcomeSlide(R.drawable.page_1, "Welcome to Top Gun", "Explore advanced fighter aircraft, helicopters and spy planes."),
-            WelcomeSlide(R.drawable.page_2, "Every detail", "Specs, history, 3D models and performance for each aircraft."),
-            WelcomeSlide(R.drawable.page_3, "Save and watch", "Keep your favorites and watch videos and galleries."),
-            WelcomeSlide(R.drawable.page_4, "Ready for take-off?", "Sign in to comment, rate and unlock Pro."),
+            WelcomeSlide(R.drawable.page_1, R.string.welcome_slide1_title, R.string.welcome_slide1_subtitle),
+            WelcomeSlide(R.drawable.page_2, R.string.welcome_slide2_title, R.string.welcome_slide2_subtitle),
+            WelcomeSlide(R.drawable.page_3, R.string.welcome_slide3_title, R.string.welcome_slide3_subtitle),
+            WelcomeSlide(R.drawable.page_4, R.string.welcome_slide4_title, R.string.welcome_slide4_subtitle),
         )
     }
 }

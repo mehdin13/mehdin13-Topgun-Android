@@ -24,9 +24,12 @@ data class DetailsState(
     val isRating: Boolean = false,
     val busy: Boolean = false,
     /** Short message shown in a toast (iOS Toast "Added To Favorite"), consumed by [DetailsViewModel.toastShown]. */
-    val toast: String? = null,
+    val toast: DetailToast? = null,
     val error: String? = null,
 )
+
+/** Which toast to show; the composable turns it into localized text. */
+enum class DetailToast { FavoriteAdded, FavoriteRemoved }
 
 /** iOS `DetailsViewModel` plus the rate and like requests that lived in the view. */
 class DetailsViewModel(private val api: TopGunApi, private val aircraftId: Int) : ViewModel() {
@@ -60,7 +63,7 @@ class DetailsViewModel(private val api: TopGunApi, private val aircraftId: Int) 
                 val added = api.toggleFavorite(aircraftId)
                 _state.value = _state.value.copy(
                     isFavorite = added, busy = false,
-                    toast = if (added) "Added To Favorite" else "Remove From Favorite",
+                    toast = if (added) DetailToast.FavoriteAdded else DetailToast.FavoriteRemoved,
                 )
             } catch (e: kotlin.coroutines.cancellation.CancellationException) {
                 throw e

@@ -51,11 +51,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import app.topgun.android.R
 import app.topgun.android.designsystem.TG
 import app.topgun.android.designsystem.TGAsset
 import app.topgun.android.designsystem.TGBrand
@@ -106,105 +109,105 @@ fun FilterSheetContent(
             Modifier.fillMaxWidth().padding(horizontal = TGSpace.l),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            BarButton("Reset", TGBrand.red, onReset)
-            Text("Filter", style = TGHomeText.headline, color = c.textPrimary, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
-            BarButton("Done", c.accent, onDone, bold = true)
+            BarButton(stringResource(R.string.home_reset), TGBrand.red, onReset)
+            Text(stringResource(R.string.home_filter), style = TGHomeText.headline, color = c.textPrimary, textAlign = TextAlign.Center, modifier = Modifier.weight(1f))
+            BarButton(stringResource(R.string.home_done), c.accent, onDone, bold = true)
         }
         LazyColumn(
             Modifier.weight(1f),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = TGSpace.l, vertical = TGSpace.s),
             verticalArrangement = Arrangement.spacedBy(TGSpace.l),
         ) {
-            section("Aircraft Type", Icons.Outlined.Flight) {
+            section(R.string.home_section_aircraft_type, Icons.Outlined.Flight) {
                 FilterOptions.aircraftTypes.forEach { t ->
-                    RadioRow(t, state.category == t) { onChange(state.copy(category = if (state.category == t) null else t)) }
+                    RadioRow(optionLabel(t), state.category == t) { onChange(state.copy(category = if (state.category == t) null else t)) }
                 }
             }
-            section("Country of Origin", Icons.Outlined.Flag) {
+            section(R.string.home_section_country_of_origin, Icons.Outlined.Flag) {
                 FilterOptions.originCountries.forEach { co ->
                     FlagRow(co, selected = state.countryOfOrigin == co.name) {
                         onChange(state.copy(countryOfOrigin = if (state.countryOfOrigin == co.name) null else co.name))
                     }
                 }
             }
-            section("Generation", Icons.Outlined.Settings) {
-                FilterOptions.generations.forEach { g -> CheckRow(g, g in state.generations) { onChange(state.copy(generations = state.generations.toggled(g))) } }
+            section(R.string.home_section_generation, Icons.Outlined.Settings) {
+                FilterOptions.generations.forEach { g -> CheckRow(optionLabel(g), g in state.generations) { onChange(state.copy(generations = state.generations.toggled(g))) } }
             }
-            section("Role", Icons.Outlined.GpsFixed) {
-                FilterOptions.roles.forEach { r -> CheckRow(r, r in state.roles) { onChange(state.copy(roles = state.roles.toggled(r))) } }
+            section(R.string.home_section_role, Icons.Outlined.GpsFixed) {
+                FilterOptions.roles.forEach { r -> CheckRow(optionLabel(r), r in state.roles) { onChange(state.copy(roles = state.roles.toggled(r))) } }
             }
-            section("Status", Icons.Outlined.EmojiEvents) {
+            section(R.string.home_section_status, Icons.Outlined.EmojiEvents) {
                 FilterOptions.statuses.forEach { s ->
-                    RadioRow(s, state.status == s) { onChange(state.copy(status = if (state.status == s) null else s)) }
+                    RadioRow(optionLabel(s), state.status == s) { onChange(state.copy(status = if (state.status == s) null else s)) }
                 }
             }
-            section("Stealth Capabilities", Icons.Outlined.VisibilityOff) {
-                FilterOptions.stealth.forEach { s -> CheckRow(s, s in state.stealth) { onChange(state.copy(stealth = state.stealth.toggled(s))) } }
+            section(R.string.home_section_stealth, Icons.Outlined.VisibilityOff) {
+                FilterOptions.stealth.forEach { s -> CheckRow(optionLabel(s), s in state.stealth) { onChange(state.copy(stealth = state.stealth.toggled(s))) } }
             }
-            section("Price Range", Icons.Outlined.MonetizationOn) {
+            section(R.string.home_section_price, Icons.Outlined.MonetizationOn) {
                 SliderRow(
                     value = state.priceMax, range = FilterOptions.PRICE_MIN..FilterOptions.PRICE_MAX, step = FilterOptions.PRICE_STEP,
-                    label = if (state.priceMax >= FilterOptions.PRICE_MAX) "Any price" else "Up to: ${state.priceMax.toInt()} million",
-                    description = "Maximum price",
+                    label = if (state.priceMax >= FilterOptions.PRICE_MAX) stringResource(R.string.home_any_price) else stringResource(R.string.home_up_to_price, state.priceMax.toInt()),
+                    description = stringResource(R.string.home_max_price),
                 ) { onChange(state.copy(priceMax = it)) }
             }
-            section("Speed", Icons.Outlined.Speed) {
+            section(R.string.home_section_speed, Icons.Outlined.Speed) {
                 FilterOptions.speeds.forEach { sp ->
                     Column {
-                        RadioRow(sp.label, state.speed == sp) { onChange(state.copy(speed = if (state.speed == sp) null else sp)) }
+                        RadioRow(stringResource(sp.labelRes), state.speed == sp) { onChange(state.copy(speed = if (state.speed == sp) null else sp)) }
                         if (state.speed == sp) {
                             Text(
-                                "${sp.minKph}-${sp.maxKph} km/h", style = TGHomeText.caption, color = c.textSecondary,
+                                stringResource(R.string.home_speed_range, sp.minKph, sp.maxKph), style = TGHomeText.caption, color = c.textSecondary,
                                 modifier = Modifier.padding(start = TGSpace.m, bottom = TGSpace.s),
                             )
                         }
                     }
                 }
             }
-            section("Primary User", Icons.Outlined.Group) {
+            section(R.string.home_section_primary_user, Icons.Outlined.Group) {
                 FilterOptions.primaryUsers.forEach { u ->
-                    CheckRow(u, u in state.primaryUsers, square = true) { onChange(state.copy(primaryUsers = state.primaryUsers.toggled(u))) }
+                    CheckRow(optionLabel(u), u in state.primaryUsers, square = true) { onChange(state.copy(primaryUsers = state.primaryUsers.toggled(u))) }
                 }
             }
-            section("Hardpoints or Payload", Icons.Outlined.GpsFixed) {
+            section(R.string.home_section_hardpoints, Icons.Outlined.GpsFixed) {
                 FilterOptions.hardpoints.forEach { h ->
-                    RadioRow(h, state.hardpoints == h) { onChange(state.copy(hardpoints = if (state.hardpoints == h) null else h)) }
+                    RadioRow(optionLabel(h), state.hardpoints == h) { onChange(state.copy(hardpoints = if (state.hardpoints == h) null else h)) }
                 }
             }
-            section("Range (in km)", Icons.Outlined.Map) {
+            section(R.string.home_section_range, Icons.Outlined.Map) {
                 SliderRow(
                     value = state.rangeKm, range = 0f..FilterOptions.RANGE_MAX, step = FilterOptions.RANGE_STEP,
-                    label = if (state.rangeKm >= FilterOptions.RANGE_MAX) "Any range" else "Up to: ${state.rangeKm.toInt()} km",
-                    description = "Maximum range in kilometres",
+                    label = if (state.rangeKm >= FilterOptions.RANGE_MAX) stringResource(R.string.home_any_range) else stringResource(R.string.home_up_to_range, state.rangeKm.toInt()),
+                    description = stringResource(R.string.home_max_range),
                 ) { onChange(state.copy(rangeKm = it)) }
             }
-            section("Warfare Systems", Icons.Outlined.CalendarMonth) {
-                SwitchRow("Electronic Warfare Equipped", state.electronicWarfare, enabled = true) { onChange(state.copy(electronicWarfare = it)) }
+            section(R.string.home_section_warfare, Icons.Outlined.CalendarMonth) {
+                SwitchRow(stringResource(R.string.home_electronic_warfare_equipped), state.electronicWarfare, enabled = true) { onChange(state.copy(electronicWarfare = it)) }
             }
-            section("Manufacturer", Icons.Outlined.CalendarMonth) {
+            section(R.string.home_section_manufacturer, Icons.Outlined.CalendarMonth) {
                 FilterOptions.manufacturers.forEach { m ->
                     RadioRow(m, state.manufacturer == m) { onChange(state.copy(manufacturer = if (state.manufacturer == m) null else m)) }
                 }
             }
-            section("Introduction Year", Icons.Outlined.CalendarMonth) {
+            section(R.string.home_section_intro_year, Icons.Outlined.CalendarMonth) {
                 SliderRow(
                     value = state.introYear, range = FilterOptions.YEAR_MIN..FilterOptions.YEAR_MAX, step = FilterOptions.YEAR_STEP,
-                    label = if (state.introYear <= FilterOptions.YEAR_MIN) "Any year" else "From: ${state.introYear.toInt()}",
-                    description = "Introduction year",
+                    label = if (state.introYear <= FilterOptions.YEAR_MIN) stringResource(R.string.home_any_year) else stringResource(R.string.home_from_year, state.introYear.toInt()),
+                    description = stringResource(R.string.home_intro_year_description),
                 ) { onChange(state.copy(introYear = it)) }
             }
-            section("VIP Content", Icons.Outlined.WorkspacePremium) {
+            section(R.string.home_section_vip, Icons.Outlined.WorkspacePremium) {
                 SwitchRow(
-                    "VIP Content Only", state.vipOnly && isPremium, enabled = isPremium,
+                    stringResource(R.string.home_vip_only), state.vipOnly && isPremium, enabled = isPremium,
                     locked = !isPremium, onLockedClick = onUpgrade,
                 ) { onChange(state.copy(vipOnly = it)) }
             }
-            section("Crew Size", Icons.Outlined.Group) {
+            section(R.string.home_section_crew, Icons.Outlined.Group) {
                 Row(Modifier.fillMaxWidth().padding(vertical = TGSpace.s), horizontalArrangement = Arrangement.SpaceEvenly) {
                     (1..2).forEach { size ->
                         val on = state.crewSize == size
                         val tint = if (on) TGHomeColors.systemGreen else TGHomeColors.systemGray
-                        val label = "$size Pilot${if (size > 1) "s" else ""}"
+                        val label = pluralStringResource(R.plurals.home_crew_pilots, size, size)
                         Column(
                             Modifier
                                 .heightIn(min = TGSize.tapMin)
@@ -218,7 +221,7 @@ fun FilterSheetContent(
                     }
                 }
             }
-            section("Countries of Operation", Icons.Outlined.Public) {
+            section(R.string.home_section_operation_countries, Icons.Outlined.Public) {
                 FilterOptions.operatingCountries.forEach { co ->
                     FlagRow(co, selected = co.name in state.countries, checkStyle = true) { onChange(state.copy(countries = state.countries.toggled(co.name))) }
                 }
@@ -230,15 +233,15 @@ fun FilterSheetContent(
 private fun List<String>.toggled(value: String) = if (value in this) this - value else this + value
 
 private fun androidx.compose.foundation.lazy.LazyListScope.section(
-    title: String,
+    titleRes: Int,
     icon: ImageVector,
     rows: @Composable () -> Unit,
 ) {
-    item(key = title) {
+    item(key = titleRes) {
         Column(verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(TGSpace.s)) {
                 Icon(icon, contentDescription = null, tint = TGBrand.blue, modifier = Modifier.size(TGHomeSize.sectionIcon))
-                Text(title, style = TGHomeText.headline, color = TG.colors.textPrimary)
+                Text(stringResource(titleRes), style = TGHomeText.headline, color = TG.colors.textPrimary)
             }
             Column(
                 Modifier.fillMaxWidth().clip(TGRadius.card).background(TG.colors.card).padding(horizontal = TGSpace.l, vertical = TGSpace.xs),
@@ -312,7 +315,7 @@ private fun FlagRow(country: FilterCountry, selected: Boolean, checkStyle: Boole
             Box(Modifier.size(TGHomeSize.flagWidth, TGHomeSize.flagHeight))
         }
         Text(
-            country.name, style = TGHomeText.body,
+            countryLabel(country), style = TGHomeText.body,
             color = if (selected && !checkStyle) TGBrand.blue else TG.colors.textPrimary, modifier = Modifier.weight(1f),
         )
         if (checkStyle) CheckIcon(selected, square = false)
@@ -350,7 +353,7 @@ private fun SwitchRow(
         horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
     ) {
         Text(title, style = TGHomeText.body, color = if (checked) TGBrand.blue else TGHomeColors.systemGray, modifier = Modifier.weight(1f))
-        if (locked) Icon(Icons.Filled.Lock, contentDescription = "Pro only", tint = TGBrand.orange, modifier = Modifier.size(TGSpace.l))
+        if (locked) Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.home_pro_only), tint = TGBrand.orange, modifier = Modifier.size(TGSpace.l))
         Switch(checked = checked, onCheckedChange = onChange, enabled = enabled)
     }
 }

@@ -1,5 +1,7 @@
 package app.topgun.android.features.countries
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,10 +38,11 @@ import app.topgun.android.platform.ui.MapPin
 import app.topgun.core.model.Country
 
 /** Pin for a country with known coordinates (iOS `CountryOfOperationModel` -> map annotation). */
-fun Country.toMapPin(): MapPin? {
+/** [aircraftLabel] is the translated "Aircraft:" caption shown before the count. */
+fun Country.toMapPin(aircraftLabel: String): MapPin? {
     val la = latitude ?: return null
     val lo = longitude ?: return null
-    return MapPin(id, name, "Aircraft: $aircraftCount", la, lo, flagUrl = flagIcon ?: icon)
+    return MapPin(id, name, "$aircraftLabel $aircraftCount", la, lo, flagUrl = flagIcon ?: icon)
 }
 
 /**
@@ -49,7 +52,8 @@ fun Country.toMapPin(): MapPin? {
 @Composable
 fun CountryMapPanel(countries: List<Country>, globe: Boolean, onOpenCountry: (Int) -> Unit, modifier: Modifier = Modifier) {
     val ui = LocalPlatformUi.current
-    val pins = remember(countries) { countries.mapNotNull { it.toMapPin() } }
+    val aircraftLabel = stringResource(R.string.countries_pin_aircraft)
+    val pins = remember(countries, aircraftLabel) { countries.mapNotNull { it.toMapPin(aircraftLabel) } }
     var selected by remember { mutableStateOf<MapPin?>(null) }
     Box(modifier) {
         if (globe) ui.Globe(pins, Modifier.fillMaxSize()) { selected = it }
@@ -85,7 +89,7 @@ fun GlassCallout(title: String, subtitle: String, onMoreInfo: () -> Unit, onDism
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(TGSpace.s),
         ) {
-            Text("More Info", style = TGText.sailecBold(14), color = Color.White)
+            Text(stringResource(R.string.countries_more_info), style = TGText.sailecBold(14), color = Color.White)
             Icon(Icons.Filled.ArrowCircleRight, contentDescription = null, tint = Color.White)
         }
     }

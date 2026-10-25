@@ -1,5 +1,7 @@
 package app.topgun.android.features.blog
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -71,12 +73,12 @@ fun BlogScreen(onBack: () -> Unit) {
             AccountTopBar(open.subHeader?.takeIf { it.isNotBlank() } ?: open.title, onBack = { openId = null })
             BlogDetail(open)
         } else {
-            AccountTopBar("Blog Posts", onBack = onBack)
+            AccountTopBar(stringResource(R.string.blog_title), onBack = onBack)
             when (val s = state.blogs) {
                 Load.Loading -> BlogSkeleton()
                 is Load.Failed -> ErrorState(s.error.userMessage, onRetry = vm::reload)
                 is Load.Loaded -> if (s.value.isEmpty()) {
-                    EmptyState("No blog posts yet")
+                    EmptyState(stringResource(R.string.blog_empty))
                 } else {
                     BlogList(state, vm, onOpen = { openId = it.id })
                 }
@@ -119,7 +121,7 @@ private fun BlogCard(blog: Blog, onOpen: () -> Unit) {
             SourceLogo(blog, TGAccountSize.blogLogoList)
             Text(blog.source, style = TGText.sailecRegular(15), color = TG.colors.textSecondary, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Box(Modifier.heightIn(min = TGSize.tapMin), contentAlignment = Alignment.Center) {
-                Text("Read More", style = TGText.sailecRegular(12), color = TGBrand.blue)
+                Text(stringResource(R.string.blog_read_more), style = TGText.sailecRegular(12), color = TGBrand.blue)
             }
         }
     }
@@ -128,7 +130,7 @@ private fun BlogCard(blog: Blog, onOpen: () -> Unit) {
 @Composable
 private fun BlogImage(blog: Blog, shape: androidx.compose.ui.graphics.Shape) {
     Box(Modifier.fillMaxWidth().height(TGAccountSize.blogImageHeight).clip(shape)) {
-        TGImage(blog.image, contentDescription = "${blog.title} image", modifier = Modifier.fillMaxSize())
+        TGImage(blog.image, contentDescription = stringResource(R.string.blog_image, blog.title), modifier = Modifier.fillMaxSize())
         if (blog.image.isNullOrBlank()) {
             // iOS placeholder `photo.fill`.
             Icon(Icons.Filled.Newspaper, contentDescription = null, tint = TGBrand.gray, modifier = Modifier.align(Alignment.Center).size(TGSize.tapMin))
@@ -141,7 +143,7 @@ private fun SourceLogo(blog: Blog, size: androidx.compose.ui.unit.Dp) {
     if (blog.sourceLogo.isNullOrBlank()) {
         Icon(Icons.Filled.Newspaper, contentDescription = null, tint = TGBrand.gray, modifier = Modifier.size(size))
     } else {
-        TGImage(blog.sourceLogo, contentDescription = "${blog.source} logo", modifier = Modifier.size(size).clip(CircleShape))
+        TGImage(blog.sourceLogo, contentDescription = stringResource(R.string.blog_logo, blog.source), modifier = Modifier.size(size).clip(CircleShape))
     }
 }
 

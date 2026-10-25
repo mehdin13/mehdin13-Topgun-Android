@@ -1,6 +1,7 @@
 // ANDROID-ONLY
 package app.topgun.android.platform.ui
 
+import androidx.compose.ui.res.stringResource
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -111,6 +112,7 @@ internal object VideoUi {
         var error by remember(id) { mutableStateOf<PlayerConstants.PlayerError?>(null) }
         var exitFullscreen by remember(id) { mutableStateOf<(() -> Unit)?>(null) }
         BackHandler(enabled = exitFullscreen != null) { exitFullscreen?.invoke() }
+        val playLabel = stringResource(R.string.video_play)
 
         Box(modifier.background(TGDetailColors.photoBlack), contentAlignment = Alignment.Center) {
             val failure = error
@@ -119,8 +121,8 @@ internal object VideoUi {
                 !playing -> {
                     TGImage(youTubeThumbnailUrl(id), contentDescription = null, modifier = Modifier.fillMaxSize())
                     Box(
-                        Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = "Play video") { playing = true }
-                            .semantics { contentDescription = "Play video" },
+                        Modifier.fillMaxSize().clickable(role = Role.Button, onClickLabel = playLabel) { playing = true }
+                            .semantics { contentDescription = playLabel },
                         contentAlignment = Alignment.Center,
                     ) {
                         Box(Modifier.size(TGDetailSize.playButton).background(TGDetailColors.photoBlack.copy(alpha = 0.6f), CircleShape), contentAlignment = Alignment.Center) {
@@ -184,9 +186,9 @@ internal object VideoUi {
     @Composable
     private fun YouTubeFailure(error: PlayerConstants.PlayerError, onWatch: () -> Unit) {
         val message = when (error) {
-            PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER -> "The owner of this video does not allow it to be played in other apps."
-            PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> "This video is no longer available."
-            else -> "The video could not be played here."
+            PlayerConstants.PlayerError.VIDEO_NOT_PLAYABLE_IN_EMBEDDED_PLAYER -> stringResource(R.string.video_err_not_embeddable)
+            PlayerConstants.PlayerError.VIDEO_NOT_FOUND -> stringResource(R.string.video_err_not_found)
+            else -> stringResource(R.string.video_err_generic)
         }
         Column(
             Modifier.fillMaxSize().padding(TGSpace.l),
@@ -195,7 +197,7 @@ internal object VideoUi {
         ) {
             Text(message, style = TGText.sailecMedium(14), color = TGDetailColors.onPhoto, textAlign = TextAlign.Center)
             Button(onClick = onWatch, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin), shape = TGDetailSize.buttonRadius) {
-                Text("Watch on YouTube", style = TGText.sailecMedium(16))
+                Text(stringResource(R.string.video_watch_on_youtube), style = TGText.sailecMedium(16))
             }
         }
     }

@@ -1,6 +1,7 @@
 package app.topgun.android.features.home
 
 import androidx.lifecycle.ViewModel
+import app.topgun.android.R
 import app.topgun.core.model.AircraftFilter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,11 +12,11 @@ import kotlinx.coroutines.flow.update
 data class FilterCountry(val name: String, val code: String)
 
 /** Speed bucket (iOS `SpeedCategory`): ranges are in mph, the API gets km/h as "min,max". */
-enum class SpeedCategory(val label: String, val minMph: Int, val maxMph: Int) {
-    Subsonic("Subsonic", 0, 614),
-    Transonic("Transonic", 614, 921),
-    Supersonic("Supersonic", 921, 3836),
-    Hypersonic("Hypersonic", 3836, 19030);
+enum class SpeedCategory(val labelRes: Int, val minMph: Int, val maxMph: Int) {
+    Subsonic(R.string.home_label_subsonic, 0, 614),
+    Transonic(R.string.home_label_transonic, 614, 921),
+    Supersonic(R.string.home_label_supersonic, 921, 3836),
+    Hypersonic(R.string.home_label_hypersonic, 3836, 19030);
 
     val minKph: Int get() = (minMph * MPH_TO_KMH).toInt()
     val maxKph: Int get() = (maxMph * MPH_TO_KMH).toInt()

@@ -1,5 +1,7 @@
 package app.topgun.android.features.badges
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -61,16 +63,16 @@ fun BadgesScreen(onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize().background(TG.colors.background)) {
         if (open != null) {
-            AccountTopBar(open.name.orEmpty().ifBlank { "Badge" }, onBack = { openId = null })
+            AccountTopBar(open.name.orEmpty().ifBlank { stringResource(R.string.badges_fallback_name) }, onBack = { openId = null })
             BadgeDetail(open)
             return@Column
         }
-        AccountTopBar("Badges", onBack = onBack)
+        AccountTopBar(stringResource(R.string.badges_title), onBack = onBack)
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading badges...")
+            Load.Loading -> LoadingState(stringResource(R.string.badges_loading))
             is Load.Failed -> ErrorState(s.error.userMessage, onRetry = vm::load)
             is Load.Loaded -> if (s.value.isEmpty()) {
-                EmptyState("Sign in to collect badges.")
+                EmptyState(stringResource(R.string.badges_sign_in))
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -89,7 +91,7 @@ fun BadgesScreen(onBack: () -> Unit) {
 @Composable
 private fun BadgeCell(badge: Badge, onClick: () -> Unit) {
     val name = badge.name.orEmpty()
-    val label = if (badge.isHave) name else "$name, locked"
+    val label = if (badge.isHave) name else stringResource(R.string.badges_locked, name)
     Column(
         Modifier.fillMaxWidth()
             .then(if (badge.isHave) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)

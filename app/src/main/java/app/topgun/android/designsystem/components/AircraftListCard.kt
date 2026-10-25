@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
@@ -62,22 +64,22 @@ fun AircraftListCard(
         horizontalArrangement = Arrangement.spacedBy(TGSpace.m),
     ) {
         Box(Modifier.size(TGSize.listThumbnail).clip(TGRadius.card)) {
-            TGImage(aircraft.thumbnail, contentDescription = "${aircraft.name} photo", modifier = Modifier.size(TGSize.listThumbnail))
+            TGImage(aircraft.thumbnail, contentDescription = stringResource(R.string.ds_photo_cd, aircraft.name), modifier = Modifier.size(TGSize.listThumbnail))
             if (isLocked) {
                 Box(Modifier.size(TGSize.listThumbnail).background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.Lock, contentDescription = "Pro only", tint = Color.White)
+                    Icon(Icons.Filled.Lock, contentDescription = stringResource(R.string.ds_pro_only), tint = Color.White)
                 }
             }
         }
         Column(Modifier.weight(1f).padding(vertical = 2.dp), verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
             Text(aircraft.name, style = TGText.sailecBold(16), color = c.textPrimary, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(
-                aircraft.manufacturers.firstOrNull()?.name ?: "No description available",
+                aircraft.manufacturers.firstOrNull()?.name ?: stringResource(R.string.ds_no_description),
                 style = TGText.sailecMedium(10), color = c.textPrimary.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 aircraft.generation?.takeIf { it.isNotEmpty() }?.let { TagChip(it, Icons.Filled.Bolt, TGBrand.red) }
-                TagChip(aircraft.countries.firstOrNull()?.name ?: "Unknown Location", Icons.Outlined.Public, TGBrand.blue)
+                TagChip(aircraft.countries.firstOrNull()?.name ?: stringResource(R.string.ds_unknown_location), Icons.Outlined.Public, TGBrand.blue)
                 aircraft.produced?.takeIf { it.isNotEmpty() }?.let { TagChip(it, Icons.Outlined.CalendarMonth, TGBrand.orange) }
             }
         }

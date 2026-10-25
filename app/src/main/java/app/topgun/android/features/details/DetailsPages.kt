@@ -1,5 +1,7 @@
 package app.topgun.android.features.details
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -146,8 +148,8 @@ private fun ZoomableImage(path: String, description: String) {
 private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: Boolean, onClose: () -> Unit) {
     if (images.isEmpty()) {
         Box(Modifier.fillMaxSize().background(TGDetailColors.photoBlack).statusBarsPadding()) {
-            DetailCircleButton(Icons.Filled.Close, "Close", onClose, Modifier.padding(TGSpace.s))
-            EmptyState("No images available.", Modifier.align(Alignment.Center))
+            DetailCircleButton(Icons.Filled.Close, stringResource(R.string.ds_close), onClose, Modifier.padding(TGSpace.s))
+            EmptyState(stringResource(R.string.details_no_images), Modifier.align(Alignment.Center))
         }
         return
     }
@@ -159,7 +161,7 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
 
     Box(Modifier.fillMaxSize().background(TGDetailColors.photoBlack)) {
         HorizontalPager(pager, Modifier.fillMaxSize().clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { hidden = !hidden }) { i ->
-            ZoomableImage(images[i].image, "Aircraft photo ${i + 1} of ${images.size}")
+            ZoomableImage(images[i].image, stringResource(R.string.details_aircraft_photo_cd, i + 1, images.size))
         }
         if (!hidden || !showChrome) {
             Row(
@@ -167,11 +169,11 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 if (showChrome) {
-                    DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
-                    Text("Gallery", style = TGText.sailecBold(22), color = TGDetailColors.onPhoto, modifier = Modifier.padding(start = TGSpace.m))
+                    DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose)
+                    Text(stringResource(R.string.details_gallery), style = TGText.sailecBold(22), color = TGDetailColors.onPhoto, modifier = Modifier.padding(start = TGSpace.m))
                 } else {
                     Spacer(Modifier.weight(1f))
-                    DetailCircleButton(Icons.Filled.Close, "Close", onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
+                    DetailCircleButton(Icons.Filled.Close, stringResource(R.string.ds_close), onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
                 }
             }
         }
@@ -191,7 +193,7 @@ private fun GalleryPage(images: List<ImageGalleryItem>, start: Int, showChrome: 
                 itemsIndexed(images) { i, img ->
                     val selected = i == pager.currentPage
                     TGLoadingImage(
-                        img.image, contentDescription = "Photo ${i + 1}",
+                        img.image, contentDescription = stringResource(R.string.details_photo_n_cd, i + 1),
                         modifier = Modifier.size(TGDetailSize.thumbWidth, TGDetailSize.thumbHeight).clip(TGDetailSize.thumbRadius)
                             .border(if (selected) TGDetailSpace.hair else TGDetailSpace.zero, TGDetailColors.onPhoto, TGDetailSize.thumbRadius)
                             .clickable(role = Role.Button) { scope.launch { pager.animateScrollToPage(i) } },
@@ -234,13 +236,21 @@ private fun SpecRow(index: Int, title: String, value: String, onClick: (() -> Un
 @Composable
 private fun SpecsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Unit) {
     var units by rememberSaveable { mutableStateOf(UnitSystem.Metric) }
-    val f = remember(units) { SpecFormat(units) }
-    val na = SpecFormat.NA
+    val unitLabels = SpecUnits(
+        km = stringResource(R.string.details_unit_km), mi = stringResource(R.string.details_unit_mi),
+        kmh = stringResource(R.string.details_unit_kmh), mph = stringResource(R.string.details_unit_mph),
+        kg = stringResource(R.string.details_unit_kg), lbs = stringResource(R.string.details_unit_lbs),
+        liter = stringResource(R.string.details_unit_l), gal = stringResource(R.string.details_unit_gal),
+        m = stringResource(R.string.details_unit_m), ft = stringResource(R.string.details_unit_ft),
+        na = stringResource(R.string.ds_not_available),
+    )
+    val f = remember(units, unitLabels.na, unitLabels.km) { SpecFormat(units, unitLabels) }
+    val na = unitLabels.na
     var n = 0
     fun next() = n++
     Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
-            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose)
             Spacer(Modifier.weight(1f))
             UnitsToggle(units) { units = it }
         }
@@ -251,68 +261,68 @@ private fun SpecsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Unit) 
                     modifier = Modifier.background(TGBrand.red, androidx.compose.foundation.shape.CircleShape).padding(horizontal = TGSpace.s, vertical = TGSpace.xs),
                 )
                 Text(d.name, style = TGText.sailecBold(28), color = TG.colors.textPrimary)
-                Text("Nato Name: ${d.natoReportingName ?: na}", style = TGText.sailecRegular(10), color = TGBrand.placeholder)
+                Text(stringResource(R.string.details_nato_name, d.natoReportingName ?: na), style = TGText.sailecRegular(10), color = TGBrand.placeholder)
             }
             if (d.sketches.isNotEmpty()) {
                 val pager = rememberPagerState(pageCount = { d.sketches.size })
                 HorizontalPager(pager, Modifier.fillMaxWidth().height(TGDetailSize.sketchHeight)) { i ->
-                    TGLoadingImage(d.sketches[i].file, contentDescription = d.sketches[i].name.ifBlank { "Sketch ${i + 1}" }, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                    TGLoadingImage(d.sketches[i].file, contentDescription = d.sketches[i].name.ifBlank { stringResource(R.string.details_sketch_n, i + 1) }, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
                 }
             }
-            SpecSection("General Specifications:")
-            SpecRow(next(), "Role", d.role ?: na)
-            SpecRow(next(), "Primary User", d.primaryUser ?: na)
-            SpecRow(next(), "Developed From", d.developedFrom?.let { "Aircraft #$it" } ?: na, d.developedFrom?.let { id -> { a.onOpenAircraft(id) } })
+            SpecSection(stringResource(R.string.details_spec_general))
+            SpecRow(next(), stringResource(R.string.details_spec_role), d.role ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_primary_user), d.primaryUser ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_developed_from), d.developedFrom?.let { stringResource(R.string.details_aircraft_number, it) } ?: na, d.developedFrom?.let { id -> { a.onOpenAircraft(id) } })
 
-            SpecSection("Technical Details:")
-            SpecRow(next(), "Length", f.meters(d.length))
-            SpecRow(next(), "Height", f.meters(d.height))
-            SpecRow(next(), "Wingspan", f.meters(d.wingspan))
-            SpecRow(next(), "Full Capacity", f.liters(d.fuelCapacity))
-            SpecRow(next(), "Empty Weight", f.kg(d.emptyWeight))
-            SpecRow(next(), "Max Weight", f.kg(d.maxWeight))
+            SpecSection(stringResource(R.string.details_spec_technical))
+            SpecRow(next(), stringResource(R.string.details_spec_length), f.meters(d.length))
+            SpecRow(next(), stringResource(R.string.details_spec_height), f.meters(d.height))
+            SpecRow(next(), stringResource(R.string.details_spec_wingspan), f.meters(d.wingspan))
+            SpecRow(next(), stringResource(R.string.details_spec_full_capacity), f.liters(d.fuelCapacity))
+            SpecRow(next(), stringResource(R.string.details_spec_empty_weight), f.kg(d.emptyWeight))
+            SpecRow(next(), stringResource(R.string.details_spec_max_weight), f.kg(d.maxWeight))
 
-            SpecSection("Performance Specifications:")
-            SpecRow(next(), "Max Speed", f.kph(d.maxSpeed))
-            SpecRow(next(), "Range", f.km(d.range))
-            SpecRow(next(), "Combat Radius", f.km(d.combatRadius))
-            SpecRow(next(), "Ferry Range", f.km(d.ferryRange))
-            SpecRow(next(), "Operational Range", f.km(d.operationalRange))
-            SpecRow(next(), "Radar Range", f.km(d.radarRange))
-            SpecRow(next(), "Trust-to-Weight Ratio", d.trustToWeightRatio ?: na)
-            SpecRow(next(), "Max G-Load(Gs)", d.maxGLoadGs ?: na)
+            SpecSection(stringResource(R.string.details_spec_performance))
+            SpecRow(next(), stringResource(R.string.details_spec_max_speed), f.kph(d.maxSpeed))
+            SpecRow(next(), stringResource(R.string.details_spec_range), f.km(d.range))
+            SpecRow(next(), stringResource(R.string.details_spec_combat_radius), f.km(d.combatRadius))
+            SpecRow(next(), stringResource(R.string.details_spec_ferry_range), f.km(d.ferryRange))
+            SpecRow(next(), stringResource(R.string.details_spec_operational_range), f.km(d.operationalRange))
+            SpecRow(next(), stringResource(R.string.details_spec_radar_range), f.km(d.radarRange))
+            SpecRow(next(), stringResource(R.string.details_spec_thrust_to_weight), d.trustToWeightRatio ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_max_g_load), d.maxGLoadGs ?: na)
 
-            SpecSection("Other Specifications:")
-            SpecRow(next(), "Wing Configuration", d.wingConfiguration ?: na)
-            SpecRow(next(), "Radar System", d.radarSystem ?: na)
-            SpecRow(next(), "Jamming Systems", d.jammingSystems ?: na)
-            SpecRow(next(), "Engine Type", d.engineType ?: na)
-            SpecRow(next(), "Armament (Guns)", d.armament ?: na)
-            SpecRow(next(), "Canopy Type", d.canopyType ?: na)
-            SpecRow(next(), "IRST", d.irst ?: na)
+            SpecSection(stringResource(R.string.details_spec_other))
+            SpecRow(next(), stringResource(R.string.details_spec_wing_configuration), d.wingConfiguration ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_radar_system), d.radarSystem ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_jamming_systems), d.jammingSystems ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_engine_type), d.engineType ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_armament), d.armament ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_canopy_type), d.canopyType ?: na)
+            SpecRow(next(), stringResource(R.string.details_spec_irst), d.irst ?: na)
 
             // Fields the iOS screen does not show, and the category's custom fields. Only filled values are listed.
             val extras = listOfNotNull(
-                d.aircraftClass?.let { "Class" to it },
-                d.numberOfEngines?.let { "Number of Engines" to it.toString() },
-                d.engineAfterburner?.let { "Afterburner" to if (it) "Yes" else "No" },
-                d.flyByWire?.let { "Fly-by-Wire" to if (it) "Yes" else "No" },
-                d.hardpoints?.let { "Hardpoints" to it.toString() },
-                d.wingArea?.let { "Wing Area" to it },
-                d.wingLoading?.let { "Wing Loading" to it },
-                d.grossWeight?.let { "Gross Weight" to it },
-                d.serviceCeiling?.let { "Service Ceiling" to it.toString() },
-                d.rateOfClimb?.let { "Rate of Climb" to it.toString() },
-                d.radarCrossSection?.let { "Radar Cross Section" to it.toString() },
-                d.stealthCapabilities?.let { "Stealth" to it },
-                d.electronicCountermeasures?.let { "Electronic Countermeasures" to it },
-                d.propulsion?.let { "Propulsion" to it },
+                d.aircraftClass?.let { stringResource(R.string.details_spec_class) to it },
+                d.numberOfEngines?.let { stringResource(R.string.details_spec_number_of_engines) to it.toString() },
+                d.engineAfterburner?.let { stringResource(R.string.details_spec_afterburner) to stringResource(if (it) R.string.ds_yes else R.string.ds_no) },
+                d.flyByWire?.let { stringResource(R.string.details_spec_fly_by_wire) to stringResource(if (it) R.string.ds_yes else R.string.ds_no) },
+                d.hardpoints?.let { stringResource(R.string.details_spec_hardpoints) to it.toString() },
+                d.wingArea?.let { stringResource(R.string.details_spec_wing_area) to it },
+                d.wingLoading?.let { stringResource(R.string.details_spec_wing_loading) to it },
+                d.grossWeight?.let { stringResource(R.string.details_spec_gross_weight) to it },
+                d.serviceCeiling?.let { stringResource(R.string.details_spec_service_ceiling) to it.toString() },
+                d.rateOfClimb?.let { stringResource(R.string.details_spec_rate_of_climb) to it.toString() },
+                d.radarCrossSection?.let { stringResource(R.string.details_spec_radar_cross_section) to it.toString() },
+                d.stealthCapabilities?.let { stringResource(R.string.details_spec_stealth) to it },
+                d.electronicCountermeasures?.let { stringResource(R.string.details_spec_ecm) to it },
+                d.propulsion?.let { stringResource(R.string.details_spec_propulsion) to it },
             ).filter { it.second.isNotBlank() } + d.customFields.mapNotNull { c ->
                 val name = c.fieldName?.takeIf { it.isNotBlank() } ?: return@mapNotNull null
                 name to (c.fieldValue ?: "")
             }
             if (extras.isNotEmpty()) {
-                SpecSection("More Specifications:")
+                SpecSection(stringResource(R.string.details_spec_more))
                 extras.forEach { (title, value) -> SpecRow(next(), title, value) }
             }
             Spacer(Modifier.height(TGDetailSpace.bottomClear))
@@ -325,7 +335,7 @@ private fun UnitsToggle(selected: UnitSystem, onSelect: (UnitSystem) -> Unit) {
     Row(Modifier.clip(TGRadius.button).background(TG.colors.card)) {
         UnitSystem.entries.forEach { u ->
             Text(
-                u.label, style = TGText.sailecMedium(14),
+                stringResource(u.labelRes), style = TGText.sailecMedium(14),
                 color = if (u == selected) TGDetailColors.onPhoto else TG.colors.textPrimary,
                 modifier = Modifier.background(if (u == selected) TG.colors.accent else TG.colors.card)
                     .defaultMinSize(minHeight = TGSize.tapMin).clickable(role = Role.Button) { onSelect(u) }
@@ -347,18 +357,18 @@ private fun VideosPage(d: AircraftDetail, onClose: () -> Unit) {
     var index by rememberSaveable { mutableStateOf(0) }
     Column(Modifier.fillMaxSize().background(TGDetailColors.photoBlack).statusBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
-            DetailCircleButton(Icons.Filled.Close, "Close", onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
+            DetailCircleButton(Icons.Filled.Close, stringResource(R.string.ds_close), onClose, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
             Spacer(Modifier.weight(1f))
             if (urls.size > 1) Text("${index + 1} / ${urls.size}", style = TGText.sailecMedium(14), color = TGDetailColors.onPhoto)
             Spacer(Modifier.weight(1f))
             if (index < urls.size - 1) {
-                DetailCircleButton(Icons.Filled.SkipNext, "Next video", { index += 1 }, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
+                DetailCircleButton(Icons.Filled.SkipNext, stringResource(R.string.details_next_video), { index += 1 }, glyph = TGDetailColors.onPhoto, background = TGDetailColors.photoBlack.copy(alpha = 0.4f))
             } else {
                 Spacer(Modifier.size(TGSize.tapMin))
             }
         }
         if (urls.isEmpty()) {
-            Text("Error loading videos.", style = TGText.sailecMedium(16), color = TGBrand.red, modifier = Modifier.padding(TGSpace.l))
+            Text(stringResource(R.string.details_error_videos), style = TGText.sailecMedium(16), color = TGBrand.red, modifier = Modifier.padding(TGSpace.l))
         } else {
             key(urls[index.coerceIn(0, urls.size - 1)]) {
                 LocalPlatformUi.current.VideoPlayer(urls[index.coerceIn(0, urls.size - 1)], Modifier.fillMaxWidth().weight(1f))
@@ -375,7 +385,7 @@ private fun OperatorsPage(d: AircraftDetail, a: DetailActions, onClose: () -> Un
     val pins = rememberOperatorPins(d.countriesOfOperation)
     Box(Modifier.fillMaxSize()) {
         LocalPlatformUi.current.WorldMap(pins, Modifier.fillMaxSize(), onPinClick = { a.onOpenCountry(it.id) })
-        DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose, Modifier.statusBarsPadding().padding(TGSpace.s))
+        DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose, Modifier.statusBarsPadding().padding(TGSpace.s))
     }
 }
 
@@ -387,11 +397,11 @@ private fun PdfPage(d: AircraftDetail, onClose: () -> Unit) {
     val url = LocalAppContainer.current.media.resolve(d.filePdf)
     Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
-            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
-            Text("${d.name} PDF", style = TGText.sailecBold(16), color = TG.colors.textPrimary, modifier = Modifier.padding(start = TGSpace.m), maxLines = 1)
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose)
+            Text(stringResource(R.string.details_pdf_title, d.name), style = TGText.sailecBold(16), color = TG.colors.textPrimary, modifier = Modifier.padding(start = TGSpace.m), maxLines = 1)
         }
         if (url == null) {
-            Text("Failed to load PDF.", style = TGText.sailecMedium(16), color = TG.colors.textPrimary, modifier = Modifier.padding(TGSpace.l))
+            Text(stringResource(R.string.pdf_load_failed), style = TGText.sailecMedium(16), color = TG.colors.textPrimary, modifier = Modifier.padding(TGSpace.l))
         } else {
             LocalPlatformUi.current.PdfViewer(url, Modifier.fillMaxWidth().weight(1f))
         }
@@ -431,7 +441,7 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
         return
     }
     Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding().padding(horizontal = TGDetailSpace.ten)) {
-        Row(Modifier.fillMaxWidth().padding(vertical = TGSpace.s)) { DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose) }
+        Row(Modifier.fillMaxWidth().padding(vertical = TGSpace.s)) { DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose) }
         if (supported && url != null) {
             LocalPlatformUi.current.Model3dViewer(url, Modifier.fillMaxWidth().height(TGDetailSize.modelHeight))
         } else {
@@ -441,8 +451,8 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Icon(Icons.Filled.ViewInAr, contentDescription = null, tint = TG.colors.textSecondary, modifier = Modifier.size(TGSize.tapMin))
-                Text("3D model not available on Android yet", style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
-                Text("Only the Apple (usdz) version of this model exists so far; there is no .glb file for Android to download. We are working on it.", style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.details_model_unavailable_title), style = TGText.sailecBold(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.details_model_unavailable_body), style = TGText.sailecRegular(13), color = TG.colors.textSecondary, textAlign = TextAlign.Center)
             }
         }
         // Only this part scrolls: the 3D viewer above must keep its vertical drag for orbiting, the buttons below stay pinned.
@@ -470,7 +480,7 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
                 modifier = Modifier.align(Alignment.CenterHorizontally).width(TGDetailSize.modelButtonWidth).defaultMinSize(minHeight = TGSize.tapMin),
                 shape = TGDetailSize.buttonRadius,
             ) {
-                Text("Open in 3D viewer", style = TGText.sailecMedium(16))
+                Text(stringResource(R.string.model_open_in_viewer), style = TGText.sailecMedium(16))
             }
             Spacer(Modifier.height(TGSpace.s))
             Button(
@@ -479,7 +489,7 @@ private fun ModelPage(d: AircraftDetail, onClose: () -> Unit) {
                 shape = TGDetailSize.buttonRadius,
             ) {
                 Icon(Icons.Filled.ViewInAr, contentDescription = null)
-                Text("View in AR", style = TGText.sailecMedium(16), modifier = Modifier.padding(start = TGSpace.s))
+                Text(stringResource(R.string.model_view_in_ar), style = TGText.sailecMedium(16), modifier = Modifier.padding(start = TGSpace.s))
             }
         }
         Spacer(Modifier.height(TGSpace.xl).navigationBarsPadding())

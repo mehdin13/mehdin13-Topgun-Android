@@ -1,5 +1,7 @@
 package app.topgun.android.navigation
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -18,12 +20,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import app.topgun.android.designsystem.TG
 import app.topgun.android.designsystem.TGBrand
 
-private class TabItem(val label: String, val icon: ImageVector, val selectedIcon: ImageVector)
+private class TabItem(val label: Int, val icon: ImageVector, val selectedIcon: ImageVector)
 
 private val Tabs = listOf(
-    TabItem("Home", Icons.Outlined.Home, Icons.Filled.Home),
-    TabItem("Favorites", Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite),
-    TabItem("Settings", Icons.Outlined.Settings, Icons.Filled.Settings),
+    TabItem(R.string.nav_home, Icons.Outlined.Home, Icons.Filled.Home),
+    TabItem(R.string.nav_favorites, Icons.Outlined.FavoriteBorder, Icons.Filled.Favorite),
+    TabItem(R.string.nav_settings, Icons.Outlined.Settings, Icons.Filled.Settings),
 )
 
 /** Plain Material 3 bottom navigation bar: always visible, no animation beyond the default indicator. */
@@ -32,11 +34,12 @@ fun TopGunTabBar(selected: Int, onSelect: (Int) -> Unit, modifier: Modifier = Mo
     NavigationBar(modifier = modifier, containerColor = TG.colors.card) {
         Tabs.forEachIndexed { index, tab ->
             val on = index == selected
+            val label = stringResource(tab.label)
             NavigationBarItem(
                 selected = on,
                 onClick = { onSelect(index) },
-                icon = { Icon(if (on) tab.selectedIcon else tab.icon, contentDescription = tab.label) },
-                label = { Text(tab.label) },
+                icon = { Icon(if (on) tab.selectedIcon else tab.icon, contentDescription = label) },
+                label = { Text(label) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = TGBrand.tabIdle,
                     selectedTextColor = TG.colors.textPrimary,

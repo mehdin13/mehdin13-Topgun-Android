@@ -33,7 +33,9 @@ import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.topgun.android.R
 import app.topgun.android.data.LocalAppContainer
 import app.topgun.android.data.asApiError
 import app.topgun.android.data.containerViewModel
@@ -65,6 +67,8 @@ fun HomeScreen(
     val filterState by filterVm.state.collectAsStateWithLifecycle()
     val user by container.user.state.collectAsStateWithLifecycle()
 
+    val addedMessage = stringResource(R.string.home_toast_added_favorite)
+    val removedMessage = stringResource(R.string.home_toast_removed_favorite)
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
     var searchText by rememberSaveable { mutableStateOf("") }
@@ -82,7 +86,7 @@ fun HomeScreen(
         if (!user.isLoggedIn) { onShowSignIn(); return }
         scope.launch {
             try {
-                toast(if (vm.toggleFavorite(aircraft.id)) "Added To Favorite" else "Remove From Favorite")
+                toast(if (vm.toggleFavorite(aircraft.id)) addedMessage else removedMessage)
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) {

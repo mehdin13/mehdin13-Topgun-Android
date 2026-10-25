@@ -1,5 +1,7 @@
 package app.topgun.android.designsystem.components
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -50,7 +52,7 @@ fun EmptyState(
     ) {
         Icon(icon, contentDescription = null, tint = TG.colors.textSecondary)
         Text(message, style = TGText.sailecMedium(16), color = TG.colors.textPrimary, textAlign = TextAlign.Center)
-        if (onRetry != null) Button(onClick = onRetry) { Text("Try again") }
+        if (onRetry != null) Button(onClick = onRetry) { Text(stringResource(R.string.ds_try_again)) }
     }
 }
 

@@ -1,5 +1,7 @@
 package app.topgun.android.features.details
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -67,18 +69,21 @@ internal fun CommentsPage(aircraftId: Int, averageRating: Double?, user: UserSta
     var text by rememberSaveable { mutableStateOf("") }
     var showSignIn by rememberSaveable { mutableStateOf(false) }
     val average = averageRating ?: 0.0
+    val averageText = String.format(Locale.US, "%.1f", average)
+    val averageDescription = stringResource(R.string.details_average_rating_cd, averageText)
+    val sendDescription = stringResource(R.string.details_send_comment)
     val loaded = ui.comments as? Load.Loaded
 
     Column(Modifier.fillMaxSize().background(TG.colors.background).statusBarsPadding().imePadding()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = TGSpace.s, vertical = TGSpace.s), verticalAlignment = Alignment.CenterVertically) {
-            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onClose)
+            DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onClose)
             Icon(Icons.Filled.Forum, contentDescription = null, tint = TG.colors.accent, modifier = Modifier.padding(start = TGSpace.m))
-            Text("Comments", style = TGText.sailecBold(20), color = TG.colors.textPrimary, modifier = Modifier.padding(start = TGSpace.s))
+            Text(stringResource(R.string.details_comments), style = TGText.sailecBold(20), color = TG.colors.textPrimary, modifier = Modifier.padding(start = TGSpace.s))
             Text("(${loaded?.value?.size ?: 0})", style = TGText.sailecRegular(20), color = TG.colors.textSecondary, modifier = Modifier.padding(start = TGSpace.xs).weight(1f))
             DetailStars(Math.round(average).toInt(), TGDetailSize.smallStar)
             Text(
-                String.format(Locale.US, "%.1f", average), style = TGText.sailecBold(14), color = TG.colors.textPrimary,
-                modifier = Modifier.padding(start = TGSpace.xs).semantics { contentDescription = "Average rating ${String.format(Locale.US, "%.1f", average)} of 5" },
+                averageText, style = TGText.sailecBold(14), color = TG.colors.textPrimary,
+                modifier = Modifier.padding(start = TGSpace.xs).semantics { contentDescription = averageDescription },
             )
         }
         HorizontalDivider(color = TGBrand.gray.copy(alpha = 0.4f))
@@ -89,7 +94,7 @@ internal fun CommentsPage(aircraftId: Int, averageRating: Double?, user: UserSta
                 is Load.Failed -> ErrorState(c.error.userMessage, Modifier.align(Alignment.Center), onRetry = vm::load)
                 is Load.Loaded ->
                     if (c.value.isEmpty()) {
-                        EmptyState("No comments yet\nBe the first to share your thoughts!", Modifier.align(Alignment.Center), Icons.Filled.Forum)
+                        EmptyState(stringResource(R.string.details_no_comments), Modifier.align(Alignment.Center), Icons.Filled.Forum)
                     } else {
                         LazyColumn(
                             Modifier.fillMaxSize(),
@@ -100,7 +105,7 @@ internal fun CommentsPage(aircraftId: Int, averageRating: Double?, user: UserSta
             }
         }
 
-        ui.sendError?.let { Text(it, style = TGText.sailecRegular(12), color = TGBrand.red, modifier = Modifier.padding(horizontal = TGSpace.l)) }
+        ui.sendError?.let { Text(stringResource(R.string.details_comment_failed, it), style = TGText.sailecRegular(12), color = TGBrand.red, modifier = Modifier.padding(horizontal = TGSpace.l)) }
         HorizontalDivider(color = TGBrand.gray.copy(alpha = 0.4f))
         Row(
             Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = TGSpace.l, vertical = TGSpace.m),
@@ -112,14 +117,14 @@ internal fun CommentsPage(aircraftId: Int, averageRating: Double?, user: UserSta
             }
             OutlinedTextField(
                 value = text, onValueChange = { text = it }, modifier = Modifier.weight(1f),
-                placeholder = { Text("Write a comment...", style = TGText.sailecRegular(14)) },
+                placeholder = { Text(stringResource(R.string.details_write_comment), style = TGText.sailecRegular(14)) },
                 textStyle = TGText.sailecRegular(14), shape = TGDetailSize.inputRadius, maxLines = 4,
             )
             val canSend = text.isNotBlank() && !ui.isSending
             Box(
                 Modifier.size(TGSize.tapMin).clickable(enabled = canSend, role = Role.Button) {
                     if (!user.isLoggedIn) showSignIn = true else vm.post(text) { ok -> if (ok) text = "" }
-                }.semantics { contentDescription = "Send comment" },
+                }.semantics { contentDescription = sendDescription },
                 contentAlignment = Alignment.Center,
             ) {
                 Box(Modifier.size(TGDetailSize.sendButton).background(if (canSend) TG.colors.accent else TGBrand.gray, CircleShape), contentAlignment = Alignment.Center) {
@@ -133,10 +138,10 @@ internal fun CommentsPage(aircraftId: Int, averageRating: Double?, user: UserSta
     if (showSignIn) {
         AlertDialog(
             onDismissRequest = { showSignIn = false },
-            title = { Text("Sign In Required", style = TGText.sailecBold(18)) },
-            text = { Text("Please sign in to post comments", style = TGText.sailecRegular(14)) },
-            confirmButton = { TextButton({ showSignIn = false; a.onShowSignIn() }) { Text("Sign in") } },
-            dismissButton = { TextButton({ showSignIn = false }) { Text("OK") } },
+            title = { Text(stringResource(R.string.ds_sign_in_required), style = TGText.sailecBold(18)) },
+            text = { Text(stringResource(R.string.details_sign_in_to_comment), style = TGText.sailecRegular(14)) },
+            confirmButton = { TextButton({ showSignIn = false; a.onShowSignIn() }) { Text(stringResource(R.string.ds_sign_in)) } },
+            dismissButton = { TextButton({ showSignIn = false }) { Text(stringResource(R.string.ds_ok)) } },
         )
     }
 }
@@ -146,14 +151,23 @@ private val TGDetailSizeStroke = TGDetailSpace.hair
 /** iOS `CommentRowView`: initial avatar, name, time, text. */
 @Composable
 private fun CommentItem(c: CommentRow) {
+    val username = if (c.isSelf) stringResource(R.string.details_comment_you) else stringResource(R.string.details_comment_user, c.userId)
+    val ago = c.timeAgo?.let {
+        when (it.unit) {
+            AgoUnit.JustNow -> stringResource(R.string.details_time_just_now)
+            AgoUnit.Minutes -> stringResource(R.string.details_time_minutes_ago, it.amount)
+            AgoUnit.Hours -> stringResource(R.string.details_time_hours_ago, it.amount)
+            AgoUnit.Days -> stringResource(R.string.details_time_days_ago, it.amount)
+        }
+    }.orEmpty()
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TGSpace.m)) {
         Box(Modifier.size(TGDetailSize.avatar).background(TGBrand.gray.copy(alpha = 0.3f), CircleShape), contentAlignment = Alignment.Center) {
-            Text(c.username.take(1).uppercase(), style = TGText.sailecBold(16), color = TG.colors.textPrimary)
+            Text(username.take(1).uppercase(), style = TGText.sailecBold(16), color = TG.colors.textPrimary)
         }
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(TGSpace.s)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(c.username, style = TGText.sailecBold(14), color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
-                if (c.timeAgo.isNotEmpty()) Text(c.timeAgo, style = TGText.sailecRegular(11), color = TG.colors.textSecondary)
+                Text(username, style = TGText.sailecBold(14), color = TG.colors.textPrimary, modifier = Modifier.weight(1f))
+                if (ago.isNotEmpty()) Text(ago, style = TGText.sailecRegular(11), color = TG.colors.textSecondary)
             }
             Text(c.text, style = TGText.sailecRegular(16), color = TG.colors.textPrimary)
             HorizontalDivider(color = TGBrand.gray.copy(alpha = 0.3f))

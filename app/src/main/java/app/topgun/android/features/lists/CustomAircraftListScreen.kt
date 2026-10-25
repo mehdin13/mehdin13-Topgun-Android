@@ -1,5 +1,6 @@
 package app.topgun.android.features.lists
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,10 +55,10 @@ fun CustomAircraftListScreen(name: String, onBack: () -> Unit, onOpenAircraft: (
     Column(Modifier.fillMaxSize().background(TG.colors.background)) {
         GeoTopBar(title, onBack)
         when (val s = state) {
-            Load.Loading -> LoadingState("Loading aircraft...")
+            Load.Loading -> LoadingState(stringResource(R.string.lists_loading_aircraft))
             is Load.Failed -> ErrorState(s.error.userMessage, onRetry = vm::load)
             is Load.Loaded -> if (s.value.aircraftList.isEmpty()) {
-                EmptyState("No aircraft in this list")
+                EmptyState(stringResource(R.string.lists_empty))
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Adaptive(TGGeo.gridMinCell),
@@ -93,9 +94,9 @@ fun ListAircraftCard(aircraft: Aircraft, isLocked: Boolean, onClick: () -> Unit)
     ) {
         Box(Modifier.fillMaxWidth().height(TGGeo.gridThumbHeight).clip(TGGeo.shape10)) {
             if (aircraft.thumbnail.isNullOrBlank()) {
-                Image(painterResource(R.drawable.img_0_placeholder), "${aircraft.name} photo", Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                Image(painterResource(R.drawable.img_0_placeholder), stringResource(R.string.lists_photo, aircraft.name), Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
             } else {
-                TGImage(aircraft.thumbnail, "${aircraft.name} photo", Modifier.fillMaxSize())
+                TGImage(aircraft.thumbnail, stringResource(R.string.lists_photo, aircraft.name), Modifier.fillMaxSize())
             }
             if (isLocked) LockScrim(Modifier.fillMaxSize())
         }

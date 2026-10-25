@@ -1,5 +1,7 @@
 package app.topgun.android.features.countries
 
+import androidx.compose.ui.res.stringResource
+import app.topgun.android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,14 +72,14 @@ fun CountryListContent(
 ) {
     val c = TG.colors
     Column(Modifier.fillMaxSize().background(c.background)) {
-        GeoTopBar("Top Countries", onBack) {
-            ModeButton(Icons.Filled.ViewModule, "Show grid", state.mode == CountryViewMode.Grid) { onModeChange(CountryViewMode.Grid) }
-            ModeButton(Icons.Filled.Map, "Show map", state.mode == CountryViewMode.Map) { onModeChange(CountryViewMode.Map) }
-            ModeButton(Icons.Filled.Public, "Show globe", state.mode == CountryViewMode.Globe) { onModeChange(CountryViewMode.Globe) }
+        GeoTopBar(stringResource(R.string.countries_title), onBack) {
+            ModeButton(Icons.Filled.ViewModule, stringResource(R.string.countries_show_grid), state.mode == CountryViewMode.Grid) { onModeChange(CountryViewMode.Grid) }
+            ModeButton(Icons.Filled.Map, stringResource(R.string.countries_show_map), state.mode == CountryViewMode.Map) { onModeChange(CountryViewMode.Map) }
+            ModeButton(Icons.Filled.Public, stringResource(R.string.countries_show_globe), state.mode == CountryViewMode.Globe) { onModeChange(CountryViewMode.Globe) }
         }
         OutlinedTextField(
             value = state.query, onValueChange = onQueryChange, singleLine = true,
-            placeholder = { Text("Search countries", style = TGText.body) },
+            placeholder = { Text(stringResource(R.string.countries_search), style = TGText.body) },
             leadingIcon = { Icon(Icons.Filled.Search, contentDescription = null) },
             textStyle = TGText.sailecRegular(16),
             shape = TGRadius.button,
@@ -102,10 +104,10 @@ private fun GridBody(state: CountryListState, onOpenCountry: (Int) -> Unit, onLo
     // Defensive: repeated ids would crash the lazy grid (the view model already drops them).
     val grid = remember(state.countries) { state.countries.distinctBy { it.id } }
     when (val initial = state.initial) {
-        Load.Loading -> LoadingState("Loading countries...")
+        Load.Loading -> LoadingState(stringResource(R.string.countries_loading))
         is Load.Failed -> ErrorState(initial.error.userMessage, onRetry = onRetry)
         is Load.Loaded -> if (state.countries.isEmpty()) {
-            EmptyState("No countries found")
+            EmptyState(stringResource(R.string.countries_none_found))
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(TGGeo.featuredColumns),
@@ -138,12 +140,12 @@ private fun GridBody(state: CountryListState, onOpenCountry: (Int) -> Unit, onLo
 @Composable
 private fun MapBody(state: CountryListState, globe: Boolean, onOpenCountry: (Int) -> Unit, onRetryMap: () -> Unit) {
     when (val all = state.mapCountries) {
-        null, Load.Loading -> LoadingState("Loading countries...")
+        null, Load.Loading -> LoadingState(stringResource(R.string.countries_loading))
         is Load.Failed -> ErrorState(all.error.userMessage, onRetry = onRetryMap)
         is Load.Loaded -> {
             val q = state.query.trim()
             val shown = if (q.isEmpty()) all.value else all.value.filter { it.name.contains(q, ignoreCase = true) }
-            if (shown.none { it.latitude != null && it.longitude != null }) EmptyState("No countries with a location") else
+            if (shown.none { it.latitude != null && it.longitude != null }) EmptyState(stringResource(R.string.countries_none_with_location)) else
             CountryMapPanel(shown, globe, onOpenCountry, Modifier.fillMaxSize())
         }
     }

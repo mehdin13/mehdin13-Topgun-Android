@@ -1,5 +1,7 @@
 package app.topgun.android.features.details
 
+import app.topgun.android.R
+import androidx.compose.ui.res.stringResource
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -74,7 +76,12 @@ fun AircraftDetailScreen(
         pageIndex = DetailPage.Main.ordinal
     }
 
-    val message = ui.toast ?: ui.error
+    val toastText = when (ui.toast) {
+        DetailToast.FavoriteAdded -> stringResource(R.string.details_toast_favorite_added)
+        DetailToast.FavoriteRemoved -> stringResource(R.string.details_toast_favorite_removed)
+        null -> null
+    }
+    val message = toastText ?: ui.error
     LaunchedEffect(message) {
         if (message != null) {
             delay(2000)
@@ -87,7 +94,7 @@ fun AircraftDetailScreen(
         when (val loaded = ui.detail) {
             Load.Loading -> Column(Modifier.fillMaxSize().statusBarsPadding()) {
                 BackRow(onBack)
-                LoadingState("Loading aircraft...", Modifier.weight(1f))
+                LoadingState(stringResource(R.string.details_loading), Modifier.weight(1f))
             }
             is Load.Failed -> Column(Modifier.fillMaxSize().statusBarsPadding()) {
                 BackRow(onBack)
@@ -134,7 +141,7 @@ fun AircraftDetailScreen(
 @Composable
 private fun BackRow(onBack: () -> Unit) {
     Box(Modifier.fillMaxWidth().padding(horizontal = TGSpace.s, vertical = TGSpace.s)) {
-        DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, "Back", onBack)
+        DetailCircleButton(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.ds_back), onBack)
     }
 }
 
@@ -147,13 +154,13 @@ private fun VipLocked(signedIn: Boolean, onUnlock: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Icon(Icons.Filled.Lock, contentDescription = null, tint = TGBrand.gold, modifier = Modifier.size(TGSize.tapMin))
-        Text("Pro aircraft", style = TGText.sailecBold(22), color = TG.colors.textPrimary)
+        Text(stringResource(R.string.details_vip_title), style = TGText.sailecBold(22), color = TG.colors.textPrimary)
         Text(
-            "This aircraft is for Top Gun Pro members.",
+            stringResource(R.string.details_vip_message),
             style = TGText.sailecMedium(16), color = TG.colors.textSecondary, textAlign = TextAlign.Center,
         )
         Button(onClick = onUnlock, modifier = Modifier.padding(top = TGSpace.s)) {
-            Text(if (signedIn) "Unlock with Pro" else "Sign in to continue", style = TGText.sailecMedium(16))
+            Text(stringResource(if (signedIn) R.string.details_vip_unlock else R.string.details_vip_sign_in), style = TGText.sailecMedium(16))
         }
     }
 }
