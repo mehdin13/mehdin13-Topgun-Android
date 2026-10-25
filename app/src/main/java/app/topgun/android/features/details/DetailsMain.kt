@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,6 +52,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,7 +63,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
+import kotlinx.coroutines.delay
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
@@ -409,17 +420,7 @@ private fun Operators(countries: List<CountryOfOperation>, a: DetailActions) {
     val pins = rememberOperatorPins(countries)
     Column(verticalArrangement = Arrangement.spacedBy(TGSpace.l)) {
         DetailHeading("Operators", R.drawable.building, Modifier.fillMaxWidth())
-        val columns = 4
-        Column(Modifier.padding(horizontal = TGDetailSpace.five, vertical = TGSpace.s), verticalArrangement = Arrangement.spacedBy(TGDetailSize.flagGap)) {
-            countries.chunked(columns).forEach { row ->
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TGDetailSize.flagGap)) {
-                    row.forEach { c ->
-                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { FlagCell(c) { a.onOpenCountry(c.id) } }
-                    }
-                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
-                }
-            }
-        }
+        FlagGrid(countries)
         if (pins.isNotEmpty()) {
             Box(Modifier.fillMaxWidth().height(TGDetailSize.mediaHeight).clip(TGDetailSize.mediaRadius)) {
                 LocalPlatformUi.current.WorldMap(pins, Modifier.fillMaxSize(), onPinClick = { a.onOpenCountry(it.id) })
@@ -433,13 +434,68 @@ private fun Operators(countries: List<CountryOfOperation>, a: DetailActions) {
     }
 }
 
-/** iOS `CountryFlagIcon`: the flag, or the default aircraft flag icon. Tapping opens the country. */
+/**
+ * iOS `CountryFlagGrid`: flags in max(4, width / 70) columns. Tapping a flag shows a tooltip with the country name
+ * (and its aircraft count) for two seconds; it does not navigate. A pin on the map below opens the country.
+ */
+@Composable
+private fun FlagGrid(countries: List<CountryOfOperation>) {
+    var selected by remember { mutableStateOf<Int?>(null) }
+    LaunchedEffect(selected) {
+        if (selected != null) {
+            delay(TGDetailSize.tooltipMillis)
+            selected = null
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = maxOf(TGDetailSize.flagMinColumns, (maxWidth / TGDetailSize.flagColumnWidth).toInt())
+        Column(Modifier.padding(horizontal = TGDetailSpace.five, vertical = TGSpace.s), verticalArrangement = Arrangement.spacedBy(TGDetailSize.flagGap)) {
+            countries.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(TGDetailSize.flagGap)) {
+                    row.forEach { c ->
+                        Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                            FlagCell(c) { selected = c.id }
+                            if (selected == c.id) FlagTooltip(c)
+                        }
+                    }
+                    repeat(columns - row.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
+    }
+}
+
+/** Dark bubble above the tapped flag (iOS `tooltipView`). */
+@Composable
+private fun FlagTooltip(c: CountryOfOperation) {
+    val above = remember {
+        object : PopupPositionProvider {
+            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize): IntOffset {
+                val x = (anchorBounds.center.x - popupContentSize.width / 2).coerceIn(0, maxOf(0, windowSize.width - popupContentSize.width))
+                return IntOffset(x, maxOf(0, anchorBounds.top - popupContentSize.height))
+            }
+        }
+    }
+    Popup(popupPositionProvider = above) {
+        Column(
+            Modifier.background(TGDetailColors.photoBlack.copy(alpha = TGDetailSize.tooltipAlpha), TGDetailSize.tooltipRadius)
+                .padding(horizontal = TGSpace.l, vertical = TGSpace.s)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(c.name ?: "Unknown", style = TGText.sailecBold(12), color = TGDetailColors.onPhoto, maxLines = 1)
+            Text("${c.aircraftCount} aircraft", style = TGText.sailecRegular(12), color = TGDetailColors.onPhoto.copy(alpha = 0.8f), maxLines = 1)
+        }
+    }
+}
+
+/** iOS `CountryFlagIcon`: the flag, or the default aircraft flag icon. */
 @Composable
 private fun FlagCell(c: CountryOfOperation, onClick: () -> Unit) {
     val name = c.name ?: "Unknown"
     Box(
         Modifier.defaultMinSize(TGSize.tapMin, TGSize.tapMin).size(TGDetailSize.flag).clip(TGDetailSize.cellRadius)
-            .clickable(role = Role.Button, onClick = onClick).semantics { contentDescription = "$name, ${c.aircraftCount} aircraft" },
+            .clickable(role = Role.Button, onClickLabel = "Show country name", onClick = onClick).semantics { contentDescription = "$name, ${c.aircraftCount} aircraft" },
         contentAlignment = Alignment.Center,
     ) {
         val svg = TGAsset.flagSvg(c.code)

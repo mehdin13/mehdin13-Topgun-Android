@@ -283,6 +283,13 @@ object TGDetailSize {
     /** `CountryFlagIcon` frame. */
     val flag = 60.dp
     val flagGap = 12.dp
+    /** `CountryFlagGrid`: columns = max(4, screenWidth / 70). */
+    val flagColumnWidth = 70.dp
+    const val flagMinColumns = 4
+    /** `CountryFlagGrid` tooltip: black 85%, corner 8, shown for 2 seconds. */
+    val tooltipRadius = RoundedCornerShape(8.dp)
+    const val tooltipAlpha = 0.85f
+    const val tooltipMillis = 2000L
     /** `ManufacturerInfoView`: 35 logo + 10 padding. */
     val logo = 35.dp
     val logoPadding = 10.dp

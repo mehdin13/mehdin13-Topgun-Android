@@ -26,6 +26,11 @@ class AppContainer(
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            // Lets the backend answer in the app language (user choice, else device language).
+            val code = prefs.language.value?.code ?: AppLanguage.matching(java.util.Locale.getDefault().language).code
+            chain.proceed(chain.request().newBuilder().header("Accept-Language", code).build())
+        }
         .build()
 
     val api = TopGunApi(ApiClient(configuration, session, http))

@@ -1,4 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Top Gun</string>
+
+    <!-- Settings: language -->
+    <string name="language_title">Language</string>
+    <string name="language_system_default">System default</string>
+    <string name="selected">Selected</string>
+    <string name="not_selected">Not selected</string>
 </resources>

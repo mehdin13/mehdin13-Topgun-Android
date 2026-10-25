@@ -13,6 +13,11 @@ class AppPreferences(private val store: KeyValueStore) {
     val appearance: StateFlow<Appearance> = _appearance.asStateFlow()
     fun setAppearance(value: Appearance) { store.putString(APPEARANCE, value.name); _appearance.value = value }
 
+    /** Chosen UI language, or null to follow the device language. */
+    private val _language = MutableStateFlow(AppLanguage.fromCode(store.getString(LANGUAGE)))
+    val language: StateFlow<AppLanguage?> = _language.asStateFlow()
+    fun setLanguage(value: AppLanguage?) { store.putString(LANGUAGE, value?.code); _language.value = value }
+
     /** True once the intro/onboarding has been completed (iOS `isOnboarding`). */
     private val _introDone = MutableStateFlow(store.getBoolean(INTRO_DONE, false))
     val introDone: StateFlow<Boolean> = _introDone.asStateFlow()
@@ -37,6 +42,7 @@ class AppPreferences(private val store: KeyValueStore) {
 
     private companion object {
         const val APPEARANCE = "appearance"
+        const val LANGUAGE = "appLanguage"
         const val INTRO_DONE = "isOnboarding"
         const val NOTIFICATIONS = "notifications"
         const val EMAIL = "userEmail"
