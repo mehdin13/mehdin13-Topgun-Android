@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">Bu sürümdeki anahtar: %1$s</string>
+    <string name="auth_cancelled_hint">Giriş tamamlanmadı. Bir hesap seçtiyseniz ve hiçbir şey olmadıysa Google bu uygulama sürümünü kabul etmiyor olabilir: Android OAuth istemcisini (app.topgun.android paketi ve bu sürümün SHA-1 değeri) ve hesabınızın OAuth onay ekranında test kullanıcısı olup olmadığını kontrol edin.</string>
+</resources>

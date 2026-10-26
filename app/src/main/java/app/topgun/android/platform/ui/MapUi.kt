@@ -51,6 +51,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import app.topgun.android.BuildConfig
 import app.topgun.android.R
 import app.topgun.android.designsystem.TG
 import app.topgun.android.designsystem.TGBrand
@@ -147,7 +148,7 @@ internal object MapUi {
             }
             if (!loaded) {
                 if (timedOut) {
-                    MapNoticeBox(stringResource(R.string.map_load_failed), Modifier.fillMaxSize())
+                    MapNoticeBox(stringResource(R.string.map_load_failed) + "\n\n" + stringResource(R.string.map_key_in_build, BuildConfig.MAPS_KEY_HINT), Modifier.fillMaxSize())
                 } else {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator(color = TG.colors.accent)

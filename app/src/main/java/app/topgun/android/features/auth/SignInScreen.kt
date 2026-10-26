@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -62,6 +63,7 @@ fun SignInScreen(onDismiss: () -> Unit) {
     SignInContent(
         isLoading = state.isLoading,
         error = state.error,
+        notice = state.notice,
         onGoogle = vm::signInWithGoogle,
         onClose = onDismiss,
         onOpenPrivacy = { container.platform.openUrl(PRIVACY_POLICY_URL) },
@@ -73,12 +75,13 @@ fun SignInScreen(onDismiss: () -> Unit) {
 internal fun SignInContent(
     isLoading: Boolean,
     error: UiText?,
+    notice: UiText? = null,
     onGoogle: () -> Unit,
     onClose: () -> Unit,
     onOpenPrivacy: () -> Unit,
     onOpenTerms: () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize().systemBarsPadding()) {
+    Box(Modifier.fillMaxSize().background(TG.colors.background).systemBarsPadding()) {
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
                 painterResource(R.drawable.topgunlogo),
@@ -94,6 +97,17 @@ internal fun SignInContent(
             )
             Spacer(Modifier.weight(1f))
 
+            if (notice != null && error == null) {
+                Text(
+                    notice.asString(),
+                    style = TGEntry.footnoteStyle,
+                    color = TG.colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .padding(horizontal = TGSpace.xl, vertical = TGSpace.s)
+                        .semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
             if (error != null) {
                 Text(
                     error.asString(),

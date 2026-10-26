@@ -78,6 +78,8 @@ internal object ModelUi {
         /** [progress] is the live download state (bytes read / Content-Length); null before the first update. */
         data class Loading(val progress: ModelDownloadState.Downloading?) : Fetch
         class Failed(val message: String?, val retry: () -> Unit) : Fetch
+        /** Not on the device and not downloading (cancelled from the 3D page card, or removed): wait for the person. */
+        class Idle(val start: () -> Unit) : Fetch
         data class Ready(val file: File) : Fetch
     }
 
@@ -86,32 +88,31 @@ internal object ModelUi {
 
     private sealed interface Loaded {
         data object Loading : Loaded
-        data class Failed(val reason: String) : Loaded
+        data class Failed(val reason: String, val badFile: Boolean) : Loaded
         data class Ready(val instance: ModelInstance) : Loaded
     }
 
     /**
-     * Gets the model through the shared [ModelCache]: a downloaded file is used at once, otherwise it is downloaded and
-     * the live progress is reported as [Fetch.Loading]. Leaving the screen stops a download that only the viewer started.
+     * Derives the viewer state from the shared [ModelCache] state flow (single source of truth), so a download started
+     * here or from the offline card, finishing while the viewer is visible, shows the model at once: the state turns
+     * Downloaded and the file is handed on. Leaving the screen stops a download that only the viewer started.
      */
     @Composable
     private fun rememberModelFile(url: String): Fetch {
         val cache = ModelCache.get(LocalContext.current)
         var attempt by remember(url) { mutableIntStateOf(0) }
-        var file by remember(url, attempt) { mutableStateOf<File?>(null) }
-        var failed by remember(url, attempt) { mutableStateOf(false) }
+        var requested by remember(url) { mutableStateOf(false) }
         val state by remember(url) { cache.state(url) }.collectAsState()
         LaunchedEffect(url, attempt) {
-            val result = cache.fetch(url)
-            file = result
-            failed = result == null
+            cache.request(url)
+            requested = true
         }
         DisposableEffect(url) { onDispose { cache.release(url) } }
-        val ready = file
-        return when {
-            ready != null -> Fetch.Ready(ready)
-            failed -> Fetch.Failed((state as? ModelDownloadState.Failed)?.message) { attempt++ }
-            else -> Fetch.Loading(state as? ModelDownloadState.Downloading)
+        return when (val s = state) {
+            is ModelDownloadState.Downloaded -> cache.fileIfPresent(url)?.let { Fetch.Ready(it) } ?: Fetch.Loading(null)
+            is ModelDownloadState.Downloading -> Fetch.Loading(s)
+            is ModelDownloadState.Failed -> Fetch.Failed(s.message) { attempt++ }
+            ModelDownloadState.NotDownloaded -> if (requested) Fetch.Idle { attempt++ } else Fetch.Loading(null)
         }
     }
 
@@ -136,6 +137,13 @@ internal object ModelUi {
         }
     }
 
+    @Composable
+    private fun IdleModel(fetch: Fetch.Idle, modifier: Modifier = Modifier) {
+        Column(modifier.padding(TGSpace.l), horizontalAlignment = Alignment.CenterHorizontally) {
+            Button(onClick = fetch.start, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin)) { Text(stringResource(R.string.model_download), style = TGText.sailecMedium(16)) }
+        }
+    }
+
     /** Reads the file off the main thread into the direct buffer Filament needs. Throws when the file is not a glb/gltf (e.g. an HTML error page). */
     private suspend fun readModelBuffer(file: File): ByteBuffer = withContext(Dispatchers.IO) {
         val bytes = file.readBytes()
@@ -152,19 +160,17 @@ internal object ModelUi {
      * parse is reported as [Loaded.Failed] instead of crashing.
      */
     @Composable
-    private fun rememberModelInstance(loader: ModelLoader, file: File): Loaded {
-        val cache = ModelCache.get(LocalContext.current)
+    private fun rememberModelInstance(loader: ModelLoader, file: File, reload: Int = 0): Loaded {
         val badFile = stringResource(R.string.model_bad_file)
         val unknownError = stringResource(R.string.model_unknown_error)
-        return produceState<Loaded>(Loaded.Loading, loader, file) {
+        return produceState<Loaded>(Loaded.Loading, loader, file, reload) {
             value = try {
                 val buffer = readModelBuffer(file)
                 Loaded.Ready(loader.createModelInstance(buffer))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Throwable) { // Filament throws NPE / IllegalStateException for broken assets
-                if (e is BadModelFile) cache.invalidate(file) // do not keep a bad download
-                Loaded.Failed(if (e is BadModelFile) badFile else e.message ?: unknownError)
+                Loaded.Failed(if (e is BadModelFile) badFile else e.message ?: unknownError, e is BadModelFile)
             }
         }.value
     }
@@ -175,10 +181,12 @@ internal object ModelUi {
 
     @Composable
     fun Viewer(modelUrl: String, modifier: Modifier) {
+        val cache = ModelCache.get(LocalContext.current)
         Box(modifier.background(TG.colors.card), contentAlignment = Alignment.Center) {
             when (val fetch = rememberModelFile(modelUrl)) {
                 is Fetch.Loading -> LoadingModel(fetch.progress)
                 is Fetch.Failed -> DownloadFailed(fetch)
+                is Fetch.Idle -> IdleModel(fetch)
                 is Fetch.Ready -> {
                     val engine = rememberEngine()
                     val modelLoader = rememberModelLoader(engine)
@@ -187,9 +195,23 @@ internal object ModelUi {
                     val home = Float3(0f, 0f, CAMERA_DISTANCE)
                     val cameraNode = rememberCameraNode(engine) { position = home }
                     val manipulator = rememberCameraManipulator(orbitHomePosition = home, targetPosition = Float3(0f, 0f, 0f))
-                    when (val loaded = rememberModelInstance(modelLoader, fetch.file)) {
+                    var reload by remember(fetch.file) { mutableIntStateOf(0) }
+                    when (val loaded = rememberModelInstance(modelLoader, fetch.file, reload)) {
                         Loaded.Loading -> LoadingModel(null)
-                        is Loaded.Failed -> ErrorText(stringResource(R.string.model_display_failed, loaded.reason))
+                        is Loaded.Failed -> Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(TGSpace.m)) {
+                            ErrorText(stringResource(R.string.model_display_failed, loaded.reason))
+                            Button(
+                                onClick = {
+                                    if (loaded.badFile) { // do not keep a bad download: fetch it again
+                                        cache.invalidate(fetch.file)
+                                        cache.request(modelUrl)
+                                    } else {
+                                        reload++
+                                    }
+                                },
+                                modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin),
+                            ) { Text(stringResource(R.string.ds_try_again), style = TGText.sailecMedium(16)) }
+                        }
                         is Loaded.Ready -> {
                             val nodes = rememberNodes {
                                 add(
@@ -236,6 +258,7 @@ internal object ModelUi {
                 else -> when (val fetch = rememberModelFile(modelUrl)) {
                     is Fetch.Loading -> LoadingModel(fetch.progress, Modifier.align(Alignment.Center))
                     is Fetch.Failed -> DownloadFailed(fetch, Modifier.align(Alignment.Center))
+                    is Fetch.Idle -> IdleModel(fetch, Modifier.align(Alignment.Center))
                     is Fetch.Ready -> ArContent(fetch.file)
                 }
             }
@@ -251,7 +274,10 @@ internal object ModelUi {
         val modelLoader = rememberModelLoader(engine)
         val childNodes = rememberNodes()
         var frame by remember { mutableStateOf<Frame?>(null) }
-        val instance = (rememberModelInstance(modelLoader, file) as? Loaded.Ready)?.instance
+        val cache = ModelCache.get(LocalContext.current)
+        val loaded = rememberModelInstance(modelLoader, file)
+        val instance = (loaded as? Loaded.Ready)?.instance
+        LaunchedEffect(loaded) { if ((loaded as? Loaded.Failed)?.badFile == true) cache.invalidate(file) } // do not keep a bad download
         ARScene(
             modifier = Modifier.fillMaxSize(),
             childNodes = childNodes,

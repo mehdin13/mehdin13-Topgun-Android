@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">کلید موجود در این بیلد: %1$s</string>
+    <string name="auth_cancelled_hint">ورود کامل نشد. اگر حساب را انتخاب کردید و اتفاقی نیفتاد، ممکن است گوگل این نسخه از برنامه را نپذیرد: کلاینت OAuth اندروید (پکیج app.topgun.android و SHA-1 همین بیلد) و اینکه حساب شما در صفحه‌ی OAuth consent جزو کاربران آزمایشی باشد را بررسی کنید.</string>
+</resources>

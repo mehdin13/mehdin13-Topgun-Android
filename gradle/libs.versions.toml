@@ -22,7 +22,7 @@ purchases = "8.10.1"
 firebaseBom = "33.7.0"
 googleServices = "4.4.2"
 browser = "1.8.0"
-youtubePlayer = "12.1.0"
+youtubePlayer = "13.0.0"
 junit = "4.13.2"
 
 [libraries]

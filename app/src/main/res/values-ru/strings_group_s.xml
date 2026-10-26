@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">Ключ в этой сборке: %1$s</string>
+    <string name="auth_cancelled_hint">Вход не завершён. Если вы выбрали аккаунт и ничего не произошло, возможно, Google не принимает эту сборку: проверьте клиент OAuth для Android (пакет app.topgun.android и SHA-1 этой сборки) и что ваш аккаунт добавлен как тестовый пользователь на экране согласия OAuth.</string>
+</resources>

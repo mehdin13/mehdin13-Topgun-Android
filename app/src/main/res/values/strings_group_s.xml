@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">Key in this build: %1$s</string>
+    <string name="auth_cancelled_hint">Sign-in did not finish. If you picked an account and nothing happened, Google may not accept this app build: check the Android OAuth client (package app.topgun.android and this build\'s SHA-1) and that your account is a test user on the OAuth consent screen.</string>
+</resources>

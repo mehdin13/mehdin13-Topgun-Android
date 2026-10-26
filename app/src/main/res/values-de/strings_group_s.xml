@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">Schlüssel in diesem Build: %1$s</string>
+    <string name="auth_cancelled_hint">Die Anmeldung wurde nicht abgeschlossen. Wenn du ein Konto gewählt hast und nichts passiert ist, akzeptiert Google diesen Build eventuell nicht: Prüfe den Android-OAuth-Client (Paket app.topgun.android und SHA-1 dieses Builds) und ob dein Konto auf dem OAuth-Zustimmungsbildschirm als Testnutzer eingetragen ist.</string>
+</resources>

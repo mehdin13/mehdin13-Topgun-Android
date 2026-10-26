@@ -49,7 +49,7 @@ fun ModelDownloadState.Downloading.bytesLabel(): String =
 
 /**
  * Determinate progress of a 3D model download: title with percentage, a progress bar (indeterminate when the size is
- * unknown) and the bytes so far. Used by the viewer's loading state and by [ModelOfflineCard].
+ * unknown) and the bytes so far. Used only by the viewer's loading placeholder (the one progress bar of the 3D page).
  */
 @Composable
 fun ModelDownloadProgress(state: ModelDownloadState.Downloading, modifier: Modifier = Modifier) {
@@ -92,12 +92,12 @@ fun ModelOfflineCard(
                 icon = Icons.Filled.Download, title = stringResource(R.string.model_download_title), subtitle = stringResource(R.string.model_download_subtitle),
             ) { ActionButton(stringResource(R.string.model_download), onDownload, filled = true) }
 
-            is ModelDownloadState.Downloading -> {
-                ModelDownloadProgress(state)
-                TextButton(onClick = onCancel, modifier = Modifier.align(Alignment.CenterHorizontally).defaultMinSize(minHeight = TGSize.tapMin)) {
-                    Text(stringResource(R.string.ds_cancel), style = TGText.sailecMedium(16), color = TG.colors.accent)
-                }
-            }
+            // No bar here: the only progress bar is on the 3D viewer placeholder.
+            is ModelDownloadState.Downloading -> ActionRow(
+                icon = Icons.Filled.Download, title = stringResource(R.string.model_downloading), subtitle = "",
+            ) { TextButton(onClick = onCancel, modifier = Modifier.defaultMinSize(minHeight = TGSize.tapMin)) {
+                Text(stringResource(R.string.ds_cancel), style = TGText.sailecMedium(16), color = TG.colors.accent)
+            } }
 
             is ModelDownloadState.Downloaded -> ActionRow(
                 icon = Icons.Filled.CheckCircle, title = stringResource(R.string.model_downloaded), subtitle = stringResource(R.string.model_saved_on_device, formatByteCount(state.bytes)),

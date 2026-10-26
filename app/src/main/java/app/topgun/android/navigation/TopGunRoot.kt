@@ -126,7 +126,7 @@ fun TopGunRoot() {
     }
 }
 
-/** The three tabs (Home, Favorites, Settings) with a plain bottom navigation bar. */
+/** The three tabs (Home, Favorites, Settings) with the floating rounded tab bar. */
 @Composable
 private fun MainShell(
     onOpenAircraft: (Int) -> Unit,
@@ -139,14 +139,15 @@ private fun MainShell(
     onShowPaywall: () -> Unit,
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
-    Column(Modifier.fillMaxSize().background(TG.colors.background)) {
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+    var tabBarVisible by remember { mutableStateOf(true) }
+    Box(Modifier.fillMaxSize().background(TG.colors.background), contentAlignment = Alignment.BottomCenter) {
+        Box(Modifier.fillMaxSize()) {
             when (tab) {
-                0 -> HomeScreen(onOpenAircraft, onOpenCountries, onOpenManufacturers, onOpenList, onShowSignIn, onShowPaywall, onSetTabBarVisible = {})
+                0 -> HomeScreen(onOpenAircraft, onOpenCountries, onOpenManufacturers, onOpenList, onShowSignIn, onShowPaywall, onSetTabBarVisible = { tabBarVisible = it })
                 1 -> FavoritesScreen(onOpenAircraft, onShowSignIn, onShowPaywall)
                 else -> SettingsScreen(onOpenBlog, onOpenBadges, onShowSignIn, onShowPaywall)
             }
         }
-        TopGunTabBar(selected = tab, onSelect = { tab = it })
+        TopGunTabBar(selected = tab, onSelect = { tab = it; tabBarVisible = true }, visible = tabBarVisible)
     }
 }

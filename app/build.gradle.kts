@@ -31,6 +31,10 @@ android {
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${key("topgun.googleWebClientId")}\"")
         buildConfigField("String", "REVENUECAT_API_KEY", "\"${key("topgun.revenueCatKey")}\"")
         manifestPlaceholders["mapsApiKey"] = key("topgun.mapsApiKey")
+        // Masked fingerprint of the key baked into this build, shown next to map errors so a stale key is obvious.
+        val mapsKey = key("topgun.mapsApiKey")
+        val mapsKeyHint = if (mapsKey.length > 14) mapsKey.take(10) + "…" + mapsKey.takeLast(4) else if (mapsKey.isEmpty()) "(empty)" else "(too short)"
+        buildConfigField("String", "MAPS_KEY_HINT", "\"$mapsKeyHint\"")
     }
 
     // CI signs with a fixed test key (so the Google sign-in SHA-1 stays the same between builds).

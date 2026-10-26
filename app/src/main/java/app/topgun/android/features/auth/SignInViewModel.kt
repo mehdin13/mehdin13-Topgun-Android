@@ -19,6 +19,8 @@ data class SignInState(
     val isLoading: Boolean = false,
     /** Friendly text, never raw server or Credential Manager details. */
     val error: UiText? = null,
+    /** Neutral hint, e.g. the Google sheet closed without an account (also what a misconfigured OAuth client looks like). */
+    val notice: UiText? = null,
     /** True once signed in; the screen then closes itself. */
     val signedIn: Boolean = false,
 )
@@ -34,7 +36,7 @@ class SignInViewModel(private val user: UserRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val signedIn = user.signInWithGoogle()
-                _state.update { SignInState(signedIn = signedIn) }
+                _state.update { SignInState(signedIn = signedIn, notice = if (signedIn) null else UiText.Res(R.string.auth_cancelled_hint)) }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: GoogleSignInException) {

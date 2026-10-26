@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="map_key_in_build">المفتاح في هذا الإصدار: %1$s</string>
+    <string name="auth_cancelled_hint">لم يكتمل تسجيل الدخول. إذا اخترت حسابًا ولم يحدث شيء، فقد لا يقبل Google هذا الإصدار من التطبيق: تحقق من عميل OAuth لنظام Android (الحزمة app.topgun.android وبصمة SHA-1 لهذا الإصدار) ومن أن حسابك مستخدم تجريبي في شاشة موافقة OAuth.</string>
+</resources>

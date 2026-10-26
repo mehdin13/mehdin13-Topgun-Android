@@ -12,7 +12,7 @@ object TGSpace {
     val xl = 24.dp
     val xxl = 32.dp
     /** Space reserved at the bottom of scrolling screens so content clears the floating tab bar. */
-    val tabBarClearance = 16.dp   // simple bottom bar sits below content
+    val tabBarClearance = 120.dp  // bar 72 + iOS bottom padding 30 + margin (excl. nav-bar inset)
 }
 
 object TGRadius {
@@ -345,4 +345,16 @@ object TGImageState {
     /** Below this height (thumbnails) the error state shows only the retry icon, without the caption. */
     val captionMinHeight = 120.dp
     const val crossfade = true
+}
+
+/** Floating tab bar metrics (iOS ContentView / AnimatedTabBar). */
+object TGTabBar {
+    val horizontalMargin = 40.dp   // .padding(.horizontal, 40)
+    val bottomMargin = 30.dp       // .padding(.bottom, 30)
+    val verticalPadding = 12.dp    // iOS .verticalPadding(15), slightly tighter for 48dp ball
+    val ball = 48.dp
+    val icon = 26.dp
+    val shadow = 8.dp
+    const val idleAlpha = 0.45f    // iOS exampleGrey.opacity(0.3), raised for contrast
+    const val visibilityMillis = 300 // iOS easeInOut(0.3)
 }

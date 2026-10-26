@@ -95,7 +95,7 @@ internal object VideoUi {
     }
 
     /**
-     * YouTube link, played by android-youtube-player 12.1.0 (IFrame player in a WebView, with YouTube's own controls and
+     * YouTube link, played by android-youtube-player 13.0.0 (IFrame player in a WebView whose origin/Referer is https://<applicationId>, which YouTube requires; 12.1.0 used https://www.youtube.com and hit error 152/153, with YouTube's own controls and
      * fullscreen button). A thumbnail with a play button comes first; the player is created only after the tap (faster
      * page, one WebView less per details screen). When YouTube refuses to play the video (not embeddable, removed, ...)
      * the player is replaced by a message and a "Watch on YouTube" button that opens the YouTube app or the browser.
@@ -167,7 +167,7 @@ internal object VideoUi {
                     }
                 }
                 // controls(1): YouTube's own control bar; fullscreen(1): its fullscreen button (handled by [YouTubeFullscreen]).
-                val options = IFramePlayerOptions.Builder().controls(1).fullscreen(1).rel(0).build()
+                val options = IFramePlayerOptions.Builder(context).controls(1).fullscreen(1).rel(0).build()
                 initialize(listener, options)
             }
         }

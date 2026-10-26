@@ -84,16 +84,11 @@ class ModelCache private constructor(private val context: Context) : ModelDownlo
 
     // ------------------------------------------------------------------ viewer API
 
-    /**
-     * The local file for [url]: starts the download when needed and waits for it (progress is on [state]).
-     * Null when the download fails or is cancelled.
-     */
-    suspend fun fetch(url: String): File? {
-        start(url, explicitRequest = false)
-        val done = flow(url).first { it !is ModelDownloadState.Downloading }
-        val file = targetFor(dir, url)
-        return if (done is ModelDownloadState.Downloaded && file.exists()) file else null
-    }
+    /** Starts a download the viewer needs (no-op when downloaded or running). Progress and result arrive on [state]. */
+    fun request(url: String) = start(url, explicitRequest = false)
+
+    /** The downloaded file for [url], or null when it is not on the device. */
+    fun fileIfPresent(url: String): File? = targetFor(dir, url).takeIf { it.exists() && it.length() > 0 }
 
     /** The viewer was closed: stop a download that only the viewer asked for. */
     fun release(url: String) {
@@ -128,6 +123,10 @@ class ModelCache private constructor(private val context: Context) : ModelDownlo
         val f = flow(url)
         val target = targetFor(dir, url)
         val part = File(dir, target.nameWithoutExtension + ".part")
+        val self = currentCoroutineContext()[Job]
+        // A cancelled job may still be unwinding when a newer one for the same url has started: only the current job
+        // may publish a state or delete the shared .part file, otherwise it would clobber the newer download.
+        fun current() = synchronized(lock) { jobs[url].let { it == null || it === self } }
         try {
             try {
                 dir.mkdirs()
@@ -179,8 +178,10 @@ class ModelCache private constructor(private val context: Context) : ModelDownlo
                 f.value = ModelDownloadState.Failed(e.message ?: context.getString(R.string.model_err_connection))
             }
         } catch (e: CancellationException) {
-            part.delete()
-            f.value = ModelDownloadState.NotDownloaded
+            if (current()) {
+                part.delete()
+                f.value = ModelDownloadState.NotDownloaded
+            }
             throw e
         }
     }
