@@ -282,6 +282,11 @@ object TGDetailSize {
     val deckPeek = 40.dp
     /** `CountryFlagIcon` frame. */
     val flag = 60.dp
+    /** `CountryFlagIcon` image: 70x70 inside the 60 frame, `.shadow(black 0.3, radius 5, x 2, y 2)`. */
+    val flagImage = 70.dp
+    val flagShadowRadius = 5.dp
+    val flagShadowOffset = 2.dp
+    const val flagShadowAlpha = 0.3f
     val flagGap = 12.dp
     /** `CountryFlagGrid`: columns = max(4, screenWidth / 70). */
     val flagColumnWidth = 70.dp

@@ -64,6 +64,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.draw.BlurredEdgeTreatment
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.alpha
+import androidx.compose.foundation.layout.requiredSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -503,7 +511,7 @@ private fun FlagTooltip(c: CountryOfOperation) {
     }
 }
 
-/** iOS `CountryFlagIcon`: the flag, or the default aircraft flag icon. */
+/** iOS `CountryFlagIcon`: bundled aircraft-with-flag picture named by the API country name, or the default aircraft flag icon. */
 @Composable
 private fun FlagCell(c: CountryOfOperation, onClick: () -> Unit) {
     val name = c.name ?: stringResource(R.string.ds_unknown)
@@ -513,12 +521,18 @@ private fun FlagCell(c: CountryOfOperation, onClick: () -> Unit) {
             .clickable(role = Role.Button, onClickLabel = stringResource(R.string.details_show_country_name), onClick = onClick).semantics { contentDescription = flagDescription },
         contentAlignment = Alignment.Center,
     ) {
-        val svg = TGAsset.flagSvg(c.code)
-        when {
-            !c.flagIcon.isNullOrBlank() -> TGImage(c.flagIcon, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            svg != null -> TGImage(svg, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-            else -> Image(painterResource(R.drawable.aircraft_flag_icon), contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
-        }
+        // iOS: UIImage(named: country.name) (bundled aircraft-with-flag picture) else aircraft_flag_icon; never the API flag_icon.
+        val painter = painterResource(FlagAircraftImages.forCountry(c.name) ?: R.drawable.aircraft_flag_icon)
+        // iOS .shadow(black 0.3, radius 5, x 2, y 2): a blurred, offset, black copy of the picture behind it (blur needs Android 12+; older versions show a hard copy).
+        Image(
+            painter, contentDescription = null, contentScale = ContentScale.Fit,
+            colorFilter = ColorFilter.tint(Color.Black, BlendMode.SrcIn),
+            modifier = Modifier.requiredSize(TGDetailSize.flagImage)
+                .offset(TGDetailSize.flagShadowOffset, TGDetailSize.flagShadowOffset)
+                .alpha(TGDetailSize.flagShadowAlpha)
+                .blur(TGDetailSize.flagShadowRadius / 2, BlurredEdgeTreatment.Unbounded),
+        )
+        Image(painter, contentDescription = null, contentScale = ContentScale.Fit, modifier = Modifier.requiredSize(TGDetailSize.flagImage))
     }
 }
 
