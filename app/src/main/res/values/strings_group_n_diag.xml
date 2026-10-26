@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Diagnostic caption under the 3D viewer (stage and timings, for bug reports). English only on purpose. -->
+<resources>
+    <string name="m3n_diag_waiting" translatable="false">3D: waiting for the download to start</string>
+    <string name="m3n_diag_downloading" translatable="false">3D: downloading %1$s of %2$s</string>
+    <string name="m3n_diag_downloading_unknown" translatable="false">3D: downloading %1$s</string>
+    <string name="m3n_diag_idle" translatable="false">3D: not downloaded</string>
+    <string name="m3n_diag_failed" translatable="false">3D: download failed (%1$s)</string>
+    <string name="m3n_diag_downloaded" translatable="false">Downloaded %1$s</string>
+    <string name="m3n_diag_engine" translatable="false">engine %1$d ms</string>
+    <string name="m3n_diag_read" translatable="false">read %1$d ms</string>
+    <string name="m3n_diag_parsed" translatable="false">parsed %1$d ms</string>
+    <string name="m3n_diag_textures" translatable="false">textures %1$d ms</string>
+    <string name="m3n_diag_textures_timeout" translatable="false">textures TIMED OUT after %1$d ms</string>
+    <string name="m3n_diag_node" translatable="false">node %1$d ms</string>
+    <string name="m3n_diag_rendering" translatable="false">rendering</string>
+    <string name="m3n_diag_first_frame" translatable="false">first frame %1$d ms after download</string>
+    <string name="m3n_diag_error" translatable="false">ERROR %1$s: %2$s</string>
+</resources>

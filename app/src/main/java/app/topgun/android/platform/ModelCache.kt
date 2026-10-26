@@ -161,6 +161,7 @@ class ModelCache private constructor(private val context: Context) : ModelDownlo
                                 }
                             }
                         }
+                        f.value = ModelDownloadState.Downloading(read, total) // the throttled loop may have stopped short of 100%
                         if (total != null && read != total) {
                             part.delete()
                             f.value = ModelDownloadState.Failed(context.getString(R.string.model_err_interrupted))
