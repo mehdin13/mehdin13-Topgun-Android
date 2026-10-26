@@ -2,4 +2,5 @@
 <resources>
     <string name="map_key_in_build">Clave en esta compilación: %1$s</string>
     <string name="auth_cancelled_hint">El inicio de sesión no terminó. Si elegiste una cuenta y no pasó nada, quizá Google no acepte esta compilación: revisa el cliente OAuth de Android (paquete app.topgun.android y el SHA-1 de esta compilación) y que tu cuenta sea usuario de prueba en la pantalla de consentimiento OAuth.</string>
+    <string name="auth_client_in_build">ID de cliente de Google en esta compilación: %1$s</string>
 </resources>

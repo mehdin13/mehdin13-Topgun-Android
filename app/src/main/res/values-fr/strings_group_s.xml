@@ -2,4 +2,5 @@
 <resources>
     <string name="map_key_in_build">Clé dans cette version : %1$s</string>
     <string name="auth_cancelled_hint">La connexion ne s\'est pas terminée. Si vous avez choisi un compte sans résultat, Google n\'accepte peut-être pas cette version : vérifiez le client OAuth Android (paquet app.topgun.android et SHA-1 de cette version) et que votre compte est un utilisateur test sur l\'écran de consentement OAuth.</string>
+    <string name="auth_client_in_build">ID client Google dans cette version : %1$s</string>
 </resources>

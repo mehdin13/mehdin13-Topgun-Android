@@ -432,7 +432,7 @@ internal fun rememberOperatorPins(countries: List<CountryOfOperation>): List<Map
         countries.mapNotNull { c ->
             val lat = c.latitude ?: return@mapNotNull null
             val lon = c.longitude ?: return@mapNotNull null
-            MapPin(c.id, c.name ?: unknown, context.getString(R.string.details_aircraft_count, c.aircraftCount), lat, lon, media.resolve(c.flagIcon))
+            MapPin(c.id, c.name ?: unknown, null, lat, lon, media.resolve(c.flagIcon))
         }
     }
 }
@@ -506,7 +506,6 @@ private fun FlagTooltip(c: CountryOfOperation) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(c.name ?: stringResource(R.string.ds_unknown), style = TGText.sailecBold(12), color = TGDetailColors.onPhoto, maxLines = 1)
-            Text(stringResource(R.string.details_aircraft_count, c.aircraftCount), style = TGText.sailecRegular(12), color = TGDetailColors.onPhoto.copy(alpha = 0.8f), maxLines = 1)
         }
     }
 }
@@ -515,7 +514,7 @@ private fun FlagTooltip(c: CountryOfOperation) {
 @Composable
 private fun FlagCell(c: CountryOfOperation, onClick: () -> Unit) {
     val name = c.name ?: stringResource(R.string.ds_unknown)
-    val flagDescription = stringResource(R.string.details_flag_cd, name, c.aircraftCount)
+    val flagDescription = name
     Box(
         Modifier.defaultMinSize(TGSize.tapMin, TGSize.tapMin).size(TGDetailSize.flag).clip(TGDetailSize.cellRadius)
             .clickable(role = Role.Button, onClickLabel = stringResource(R.string.details_show_country_name), onClick = onClick).semantics { contentDescription = flagDescription },

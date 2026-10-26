@@ -32,6 +32,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.topgun.android.BuildConfig
 import app.topgun.android.R
 import app.topgun.android.data.LocalAppContainer
 import app.topgun.android.data.UiText
@@ -97,6 +98,15 @@ internal fun SignInContent(
             )
             Spacer(Modifier.weight(1f))
 
+            if (notice != null || error != null) {
+                Text(
+                    stringResource(R.string.auth_client_in_build, BuildConfig.GOOGLE_CLIENT_HINT),
+                    style = TGEntry.footnoteStyle,
+                    color = TG.colors.textSecondary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = TGSpace.xl),
+                )
+            }
             if (notice != null && error == null) {
                 Text(
                     notice.asString(),

@@ -34,6 +34,9 @@ android {
         // Masked fingerprint of the key baked into this build, shown next to map errors so a stale key is obvious.
         val mapsKey = key("topgun.mapsApiKey")
         val mapsKeyHint = if (mapsKey.length > 14) mapsKey.take(10) + "…" + mapsKey.takeLast(4) else if (mapsKey.isEmpty()) "(empty)" else "(too short)"
+        val webClient = key("topgun.googleWebClientId")
+        val webClientHint = if (webClient.length > 24) webClient.take(18) + "…" + webClient.takeLast(26) else if (webClient.isEmpty()) "(empty)" else "(too short)"
+        buildConfigField("String", "GOOGLE_CLIENT_HINT", "\"$webClientHint\"")
         buildConfigField("String", "MAPS_KEY_HINT", "\"$mapsKeyHint\"")
     }
 
